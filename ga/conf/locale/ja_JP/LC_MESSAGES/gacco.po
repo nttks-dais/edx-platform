@@ -183,3 +183,11 @@ msgstr "アンケート結果がCSVファイルでダウンロードできます
 #: lms/templates/instructor/instructor_dashboard_2/survey.html
 msgid "Get Survey CSV"
 msgstr "アンケート結果をCSVとしてダウンロードする"
+
+#: lms/templates/dashboard/_dashboard_certificate_information.html
+msgid "Congratulations! You've got the {cert_name_short} of this course. Download your {cert_name_short} and Share it below."
+msgstr "おめでとうございます！{cert_name_short}が授与されました。下のボタンから{cert_name_short}をダウンロードできます。"
+
+#: lms/templates/dashboard/_dashboard_certificate_information.html
+msgid "Successfully passed the Certificate of gacco"
+msgstr "gaccoの修了証を取得しました"
