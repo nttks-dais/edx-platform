@@ -70,7 +70,7 @@ else:
     % elif cert_status['show_download_url'] and (enrollment.mode == 'honor' or enrollment.mode == 'audit'):
       <div class="action action-certificate clearfix panel radius callout">
          ${_("Congratulations! You've got the {cert_name_short} of this course. Download your {cert_name_short} and Share it below.").format(cert_name_short=cert_name_short,)}<br/>
-        <a class="f_button tiny radius left success" style="color:white; margin-bottom:0px;" href="${cert_status['download_url']}" title="${_('This link will open/download a PDF document')}" target="_blank">
+        <a class="f_button tiny radius left success" style="color:white; margin-bottom:0px;" href="${cert_status['download_url']}" title="${_('This link will open/download a PDF document')}" target="_blank" onclick='trackCertToGA("${course.id}");'>
          ${_("Download Your {cert_name_short} (PDF)").format(cert_name_short=cert_name_short,)}</a>
         ##<a class="right" href="#" onclick='postToFB({"url":"${facebook_url}", "action_type":"${facebook_action_type}"}); return false;'>
         ##  <img src="/static/images/gacco_icon_facebook.png" width="36px" alt="${_("Share to facebook")}"></a>
@@ -80,7 +80,7 @@ else:
     % elif cert_status['show_download_url'] and enrollment.mode == 'verified' and cert_status['mode'] == 'honor':
       <div class="action">
         <p>${_('Since we did not have a valid set of verification photos from you when your {cert_name_long} was generated, we could not grant you a verified {cert_name_short}. An honor code {cert_name_short} has been granted instead.').format(cert_name_short=cert_name_short, cert_name_long=cert_name_long)}</p>
-        <a class="f_button tiny radius left success" style="color:white; margin-bottom:0px;" href="${cert_status['download_url']}" title="${_('This link will open/download a PDF document')}" target="_blank">
+        <a class="f_button tiny radius left success" style="color:white; margin-bottom:0px;" href="${cert_status['download_url']}" title="${_('This link will open/download a PDF document')}" target="_blank" onclick='trackCertToGA("${course.id}");'>
           ${_("Download Your {cert_name_short} (PDF)").format(cert_name_short=cert_name_short)}</a>
       </div>
     % elif cert_status['show_download_url'] and enrollment.mode == 'verified':

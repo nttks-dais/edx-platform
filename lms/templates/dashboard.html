@@ -216,6 +216,15 @@
       js.src=p+'://platform.twitter.com/widgets.js';
       fjs.parentNode.insertBefore(js,fjs);}
   }(document, 'script', 'twitter-wjs');
+
+  function trackCertToGA(course_id){
+    % if settings.FEATURES.get('SEGMENT_IO_LMS'):
+    analytics.track('Download', {category: 'Certificate', label: course_id,  noninteraction: 1});
+    % endif
+    ##% if settings.GOOGLE_ANALYTICS_ACCOUNT:
+    ##ga('send', 'event', 'Certificate', 'Download', course_id, {'nonInteraction': 1});
+    ##% endif
+  }
   </script>
 </%block>
 

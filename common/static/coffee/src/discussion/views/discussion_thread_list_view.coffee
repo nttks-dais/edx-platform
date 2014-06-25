@@ -481,6 +481,17 @@ if Backbone?
         ## 検索窓が2か所になったので
         ## text = @$(".post-search-field").val()
         text = @$(event.target).val()
+        if typeof analytics.page is "function"
+          analytics.page
+            title: 'Discussion Search',
+            path: '/ga-search-discussion' + "?search_discussion=" + encodeURIComponent(text),
+            noninteraction: 1
+        #if ga?
+        #  ga('send', 'pageview', {
+        #    title: 'Discussion Search',
+        #    page: '/ga-search-discussion' + "?search_discussion=" + encodeURIComponent(text),
+        #    'nonInteraction': 1
+        #  });
         @searchFor(text)
 
     searchFor: (text, callback, value) ->

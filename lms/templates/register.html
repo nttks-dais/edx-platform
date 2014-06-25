@@ -62,6 +62,13 @@
       $('#register-form').on('ajax:success', function(event, json, xhr) {
         var url = json.redirect_url || "${reverse('dashboard')}";
         location.href = url;
+       
+        % if settings.FEATURES.get('SEGMENT_IO_LMS'):
+        analytics.track('Regist', {category: 'Account', label: "${course_id}", noninteraction: 1});
+        % endif
+        ##% if settings.GOOGLE_ANALYTICS_ACCOUNT:
+        ##ga('send', 'event', 'Account', 'Regist', "${course_id}", {'nonInteraction': 1});
+        ##% endif
       });
 
       $('#register-form').on('ajax:error', function(event, jqXHR, textStatus) {
