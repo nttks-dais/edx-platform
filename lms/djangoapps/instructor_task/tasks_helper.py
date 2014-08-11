@@ -26,6 +26,8 @@ from courseware.module_render import get_module_for_descriptor_internal
 from instructor_task.models import ReportStore, InstructorTask, PROGRESS
 from student.models import CourseEnrollment
 
+from pgreport.views import create_pgreport_csv
+
 # define different loggers for use within tasks and on client side
 TASK_LOG = get_task_logger(__name__)
 
@@ -572,3 +574,28 @@ def push_grades_to_s3(_xmodule_instance_args, _entry_id, course_id, _task_input,
 
     # One last update before we close out...
     return update_task_progress()
+
+
+def push_students_report(_xmodule_instance_args, _entry_id, course_id, _task_input, action_name):
+    """
+    For a given `course_id`, generate a grades CSV file for all students
+    """
+    start_time = datetime.now(UTC)
+    status = True
+
+    def update_task_progress():
+        """Return a dict containing info about current task"""
+        current_time = datetime.now(UTC)
+        progress = {
+            'action_name': action_name,
+            'success': status,
+            'duration_ms': int((current_time - start_time).total_seconds() * 1000),
+        }
+        _get_current_task().update_state(state=PROGRESS, meta=progress)
+
+        return progress
+
+    create_pgreport_csv(course_id)
+    return update_task_progress()
+
+
