@@ -460,3 +460,17 @@ PDFGEN_BASE_IMG_DIR = ENV_TOKENS.get('PDFGEN_BASE_IMG_DIR', CONFIG_ROOT)
 PDFGEN_BASE_PDF_DIR = ENV_TOKENS.get('PDFGEN_BASE_PDF_DIR', CONFIG_ROOT)
 PDFGEN_CERT_AUTHOR = ENV_TOKENS.get('PDFGEN_CERT_AUTHOR', 'gacco')
 PDFGEN_CERT_TITLE = ENV_TOKENS.get('PDFGEN_CERT_TITLE', 'gacco Certificate')
+
+CELERY_TIMEZONE = ENV_TOKENS.get('CELERY_TIMEZONE', TIME_ZONE)
+from celery.schedules import crontab
+task_schedule = ENV_TOKENS.get('TASK_SCHEDULE', {})
+CELERYBEAT_SCHEDULE = {}
+for name, val in task_schedule.items():
+    celery_task = {
+        name: {
+            'task': val['task'],
+            'schedule': crontab(*val['cron']),
+            'args': val['args'],
+        }
+    }
+    CELERYBEAT_SCHEDULE.update(celery_task)
