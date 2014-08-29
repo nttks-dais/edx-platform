@@ -13,6 +13,7 @@ class ProgressReport
     # attach self to html so that instructor_dashboard.coffee can find
     #  this object to call event handlers like 'onClickTitle'
     @$section.data 'wrapper', @
+    @instructor_tasks = new (PendingInstructorTasks()) @$section
 
     # gather elements
     @$pgreport_generate_btn = @$section.find("input[name='generate-pgreport-csv']'")

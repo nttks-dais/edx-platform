@@ -29,6 +29,18 @@
   <div class="request-response msg-confirm" id="pgreport-request-response"></div>
   <div class="request-response-error msg-error" id="pgreport-request-response-error"></div>
 
+
+%if settings.FEATURES.get('ENABLE_INSTRUCTOR_BACKGROUND_TASKS'):
+  <br/>
+  <div class="running-tasks-container action-type-container">
+    <h3> ${_("Pending Instructor Tasks")} </h3>
+    <p>${_("The status for any active tasks appears in a table below.")} </p>
+    <br />
+
+    <div class="running-tasks-table" data-endpoint="${ section_data['list_instructor_tasks_url'] }"></div>
+  </div>
+%endif
+
 %if section_data["modules"]: 
   <hr>
   <h2> ${_("Problem Module Progress")} </h2>
@@ -52,15 +64,4 @@
     %endfor
   %endfor
 %endif
-
-%if settings.FEATURES.get('ENABLE_INSTRUCTOR_BACKGROUND_TASKS'):
-  <br/>
-  <div class="running-tasks-container action-type-container">
-    <hr>
-    <h2> ${_("Pending Instructor Tasks")} </h2>
-    <p>${_("The status for any active tasks appears in a table below.")} </p>
-    <br />
-
-    <div class="running-tasks-table" data-endpoint="${ section_data['list_instructor_tasks_url'] }"></div>
-  </div>
-%endif
+</div>

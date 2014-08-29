@@ -276,7 +276,17 @@ class ProgressReport(object):
             return self.courseware_summary
 
         self.courseware_summary["graded_students"] = 0
+        student_count = 0
         for student in self.students.iterator():
+            student_count += 1
+            if (student_count % 100 == 0) or (
+                student_count == self.courseware_summary['active_students']
+            ):
+
+                log.info("Progress %d/%d (current student: %s)" % (
+                    student_count, self.courseware_summary['active_students'],
+                    student.username))
+
             self.request.user = student
             log.debug(" * Active user: {}".format(student))
             grade = grades.grade(student, self.request, self.course)
@@ -409,6 +419,10 @@ def get_pgreport_table(course_id):
 
 def update_pgreport_table(course_id):
     """Update table of progress_modules."""
+    match = Location.COURSE_ID_RE.match(course_id)
+    if match is None:
+        raise ValueError("{} is not of form ORG/COURSE/NAME".format(course_id))
+
     progress = ProgressReport(course_id)
     modules = progress.get_raw(command="modules")
 
