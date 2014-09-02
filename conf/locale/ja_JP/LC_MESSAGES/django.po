@@ -628,7 +628,7 @@ msgstr "日"
 #: common/djangoapps/util/date_utils.py
 msgctxt "abbreviated month name"
 msgid "Jan"
-msgstr "１月"
+msgstr "01月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Feb 10, 2014". It is used for the %b
@@ -636,7 +636,7 @@ msgstr "１月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "abbreviated month name"
 msgid "Feb"
-msgstr "２月"
+msgstr "02月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Mar 10, 2014". It is used for the %b
@@ -644,7 +644,7 @@ msgstr "２月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "abbreviated month name"
 msgid "Mar"
-msgstr "３月"
+msgstr "03月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Apr 10, 2014". It is used for the %b
@@ -652,7 +652,7 @@ msgstr "３月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "abbreviated month name"
 msgid "Apr"
-msgstr "４月"
+msgstr "04月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "May 10, 2014". It is used for the %b
@@ -660,7 +660,7 @@ msgstr "４月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "abbreviated month name"
 msgid "May"
-msgstr "５月"
+msgstr "05月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Jun 10, 2014". It is used for the %b
@@ -668,7 +668,7 @@ msgstr "５月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "abbreviated month name"
 msgid "Jun"
-msgstr "６月"
+msgstr "06月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Jul 10, 2014". It is used for the %b
@@ -676,7 +676,7 @@ msgstr "６月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "abbreviated month name"
 msgid "Jul"
-msgstr "７月"
+msgstr "07月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Aug 10, 2014". It is used for the %b
@@ -684,7 +684,7 @@ msgstr "７月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "abbreviated month name"
 msgid "Aug"
-msgstr "８月"
+msgstr "08月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Sep 10, 2014". It is used for the %b
@@ -692,7 +692,7 @@ msgstr "８月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "abbreviated month name"
 msgid "Sep"
-msgstr "９月"
+msgstr "09月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Oct 10, 2014". It is used for the %b
@@ -700,7 +700,7 @@ msgstr "９月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "abbreviated month name"
 msgid "Oct"
-msgstr "１０月"
+msgstr "10月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Nov 10, 2014". It is used for the %b
@@ -708,7 +708,7 @@ msgstr "１０月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "abbreviated month name"
 msgid "Nov"
-msgstr "１１月"
+msgstr "11月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Dec 10, 2014". It is used for the %b
@@ -716,7 +716,7 @@ msgstr "１１月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "abbreviated month name"
 msgid "Dec"
-msgstr "１２月"
+msgstr "12月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "January 10, 2014". It is used for the %B directive in
@@ -724,7 +724,7 @@ msgstr "１２月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "month name"
 msgid "January"
-msgstr "１月"
+msgstr "01月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "February 10, 2014". It is used for the %B directive in
@@ -732,7 +732,7 @@ msgstr "１月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "month name"
 msgid "February"
-msgstr "２月"
+msgstr "02月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "March 10, 2014". It is used for the %B directive in
@@ -740,7 +740,7 @@ msgstr "２月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "month name"
 msgid "March"
-msgstr "３月"
+msgstr "03月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "April 10, 2014". It is used for the %B directive in
@@ -748,7 +748,7 @@ msgstr "３月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "month name"
 msgid "April"
-msgstr "４月"
+msgstr "04月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "May 10, 2014". It is used for the %B directive in
@@ -756,7 +756,7 @@ msgstr "４月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "month name"
 msgid "May"
-msgstr "５月"
+msgstr "05月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "June 10, 2014". It is used for the %B directive in
@@ -764,7 +764,7 @@ msgstr "５月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "month name"
 msgid "June"
-msgstr "６月"
+msgstr "06月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "July 10, 2014". It is used for the %B directive in
@@ -772,7 +772,7 @@ msgstr "６月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "month name"
 msgid "July"
-msgstr "７月"
+msgstr "07月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "August 10, 2014". It is used for the %B directive in
@@ -780,7 +780,7 @@ msgstr "７月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "month name"
 msgid "August"
-msgstr "８月"
+msgstr "08月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "September 10, 2014". It is used for the %B directive in
@@ -788,7 +788,7 @@ msgstr "８月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "month name"
 msgid "September"
-msgstr "９月"
+msgstr "09月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "October 10, 2014". It is used for the %B directive in
@@ -796,7 +796,7 @@ msgstr "９月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "month name"
 msgid "October"
-msgstr "１０月"
+msgstr "10月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "November 10, 2014". It is used for the %B directive in
@@ -804,7 +804,7 @@ msgstr "１０月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "month name"
 msgid "November"
-msgstr "１１月"
+msgstr "11月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "December 10, 2014". It is used for the %B directive in
@@ -812,7 +812,7 @@ msgstr "１１月"
 #: common/djangoapps/util/date_utils.py
 msgctxt "month name"
 msgid "December"
-msgstr "１２月"
+msgstr "12月"
 
 #: common/djangoapps/util/password_policy_validators.py
 msgid "Invalid Length ({0})"
@@ -5785,7 +5785,7 @@ msgstr "講座の読み込みエラー"
 
 #: lms/templates/dashboard.html
 msgid "Email Settings for {course_number}"
-msgstr "{course_number}のメールアドレス設定"
+msgstr "{course_number}のメール受信設定"
 
 #: lms/templates/dashboard.html
 msgid "Receive course emails"
@@ -8367,7 +8367,7 @@ msgstr "履修解除してよろしいですか？（認証済み {cert_name_lon
 
 #: lms/templates/dashboard/_dashboard_course_listing.html
 msgid "Email Settings"
-msgstr "メールアドレス設定"
+msgstr "メール受信設定"
 
 #: lms/templates/dashboard/_dashboard_prompt_midcourse_reverify.html
 #: lms/templates/dashboard/_dashboard_prompt_midcourse_reverify.html
@@ -8720,7 +8720,7 @@ msgstr "コメントを追加..."
 
 #: lms/templates/discussion/_underscore_templates.html
 msgid "endorse"
-msgstr "下書き"
+msgstr "その通り！"
 
 #: lms/templates/discussion/_underscore_templates.html
 msgid "Editing response"
@@ -14711,7 +14711,9 @@ msgstr "アンケート結果ダウンロード"
 
 #: lms/templates/instructor/instructor_dashboard_2/survey.html
 msgid "The survey result can be downloaded as a CSV file."
-msgstr "アンケート結果がCSVファイルでダウンロードできます。"
+msgstr ""
+"アンケート結果がCSVファイルでダウンロードできます。<br "
+"/>CSVファイルをそのままExcelで開こうとすると、日本語が含まれている場合に文字化けしてしまいますので、一旦ファイルを保存した後、「UTF-8」に対応したテキストエディタで開き直してください。"
 
 #: lms/templates/instructor/instructor_dashboard_2/survey.html
 msgid "Get Survey CSV"
@@ -15176,3 +15178,40 @@ msgstr "このレポートに対する採点を完了し、次のステップへ
 
 msgid "Assessments of Your Response"
 msgstr "あなたのレポートに対する評価"
+
+#: /edx/app/edxapp/venvs/edxapp/src/edx-ora2/apps/openassessment/templates/openassessmentblock/peer/oa_peer_complete.html
+msgid "Continue Assessing Peers"
+msgstr "採点を続ける　"
+
+msgid "Completed"
+msgstr "完了"
+
+msgid "We could not retrieve additional submissions for assessment"
+msgstr "採点が必要なレポート提出はありません"
+
+#: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+msgid "Progress Report"
+msgstr "進捗レポート"
+
+# #: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+# msgid "Student Progress"
+# msgstr "受講者の進捗"
+#: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+msgid "Current CSV: created "
+msgstr "現行のCSV：作成日時 "
+
+#: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+msgid "Download Progress Report"
+msgstr "進捗レポートのダウンロード"
+
+#: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+msgid "Generate Progress Report"
+msgstr "進捗レポートの作成"
+
+#: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+msgid "Summary Progress"
+msgstr "進捗サマリ"
+
+#: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+msgid "Problem Module Progress"
+msgstr "Problemモジュールの進捗"

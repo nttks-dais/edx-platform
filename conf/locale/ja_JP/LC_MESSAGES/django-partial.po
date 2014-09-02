@@ -561,7 +561,7 @@ msgstr "日"
 #: common/djangoapps/util/date_utils.py:273
 msgctxt "abbreviated month name"
 msgid "Jan"
-msgstr "１月"
+msgstr "01月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Feb 10, 2014". It is used for the %b
@@ -569,7 +569,7 @@ msgstr "１月"
 #: common/djangoapps/util/date_utils.py:277
 msgctxt "abbreviated month name"
 msgid "Feb"
-msgstr "２月"
+msgstr "02月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Mar 10, 2014". It is used for the %b
@@ -577,7 +577,7 @@ msgstr "２月"
 #: common/djangoapps/util/date_utils.py:281
 msgctxt "abbreviated month name"
 msgid "Mar"
-msgstr "３月"
+msgstr "03月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Apr 10, 2014". It is used for the %b
@@ -585,7 +585,7 @@ msgstr "３月"
 #: common/djangoapps/util/date_utils.py:285
 msgctxt "abbreviated month name"
 msgid "Apr"
-msgstr "４月"
+msgstr "04月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "May 10, 2014". It is used for the %b
@@ -593,7 +593,7 @@ msgstr "４月"
 #: common/djangoapps/util/date_utils.py:289
 msgctxt "abbreviated month name"
 msgid "May"
-msgstr "５月"
+msgstr "05月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Jun 10, 2014". It is used for the %b
@@ -601,7 +601,7 @@ msgstr "５月"
 #: common/djangoapps/util/date_utils.py:293
 msgctxt "abbreviated month name"
 msgid "Jun"
-msgstr "６月"
+msgstr "06月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Jul 10, 2014". It is used for the %b
@@ -609,7 +609,7 @@ msgstr "６月"
 #: common/djangoapps/util/date_utils.py:297
 msgctxt "abbreviated month name"
 msgid "Jul"
-msgstr "７月"
+msgstr "07月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Aug 10, 2014". It is used for the %b
@@ -617,7 +617,7 @@ msgstr "７月"
 #: common/djangoapps/util/date_utils.py:301
 msgctxt "abbreviated month name"
 msgid "Aug"
-msgstr "８月"
+msgstr "08月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Sep 10, 2014". It is used for the %b
@@ -625,7 +625,7 @@ msgstr "８月"
 #: common/djangoapps/util/date_utils.py:305
 msgctxt "abbreviated month name"
 msgid "Sep"
-msgstr "９月"
+msgstr "09月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Oct 10, 2014". It is used for the %b
@@ -633,7 +633,7 @@ msgstr "９月"
 #: common/djangoapps/util/date_utils.py:309
 msgctxt "abbreviated month name"
 msgid "Oct"
-msgstr "１０月"
+msgstr "10月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Nov 10, 2014". It is used for the %b
@@ -641,7 +641,7 @@ msgstr "１０月"
 #: common/djangoapps/util/date_utils.py:313
 msgctxt "abbreviated month name"
 msgid "Nov"
-msgstr "１１月"
+msgstr "11月"
 
 #. Translators: this is an abbreviated month name that will be used when
 #. displaying dates, as in "Dec 10, 2014". It is used for the %b
@@ -649,7 +649,7 @@ msgstr "１１月"
 #: common/djangoapps/util/date_utils.py:317
 msgctxt "abbreviated month name"
 msgid "Dec"
-msgstr "１２月"
+msgstr "12月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "January 10, 2014". It is used for the %B directive in
@@ -657,7 +657,7 @@ msgstr "１２月"
 #: common/djangoapps/util/date_utils.py:324
 msgctxt "month name"
 msgid "January"
-msgstr "１月"
+msgstr "01月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "February 10, 2014". It is used for the %B directive in
@@ -665,7 +665,7 @@ msgstr "１月"
 #: common/djangoapps/util/date_utils.py:328
 msgctxt "month name"
 msgid "February"
-msgstr "２月"
+msgstr "02月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "March 10, 2014". It is used for the %B directive in
@@ -673,7 +673,7 @@ msgstr "２月"
 #: common/djangoapps/util/date_utils.py:332
 msgctxt "month name"
 msgid "March"
-msgstr "３月"
+msgstr "03月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "April 10, 2014". It is used for the %B directive in
@@ -681,7 +681,7 @@ msgstr "３月"
 #: common/djangoapps/util/date_utils.py:336
 msgctxt "month name"
 msgid "April"
-msgstr "４月"
+msgstr "04月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "May 10, 2014". It is used for the %B directive in
@@ -689,7 +689,7 @@ msgstr "４月"
 #: common/djangoapps/util/date_utils.py:340
 msgctxt "month name"
 msgid "May"
-msgstr "５月"
+msgstr "05月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "June 10, 2014". It is used for the %B directive in
@@ -697,7 +697,7 @@ msgstr "５月"
 #: common/djangoapps/util/date_utils.py:344
 msgctxt "month name"
 msgid "June"
-msgstr "６月"
+msgstr "06月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "July 10, 2014". It is used for the %B directive in
@@ -705,7 +705,7 @@ msgstr "６月"
 #: common/djangoapps/util/date_utils.py:348
 msgctxt "month name"
 msgid "July"
-msgstr "７月"
+msgstr "07月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "August 10, 2014". It is used for the %B directive in
@@ -713,7 +713,7 @@ msgstr "７月"
 #: common/djangoapps/util/date_utils.py:352
 msgctxt "month name"
 msgid "August"
-msgstr "８月"
+msgstr "08月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "September 10, 2014". It is used for the %B directive in
@@ -721,7 +721,7 @@ msgstr "８月"
 #: common/djangoapps/util/date_utils.py:356
 msgctxt "month name"
 msgid "September"
-msgstr "９月"
+msgstr "09月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "October 10, 2014". It is used for the %B directive in
@@ -729,7 +729,7 @@ msgstr "９月"
 #: common/djangoapps/util/date_utils.py:360
 msgctxt "month name"
 msgid "October"
-msgstr "１０月"
+msgstr "10月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "November 10, 2014". It is used for the %B directive in
@@ -737,7 +737,7 @@ msgstr "１０月"
 #: common/djangoapps/util/date_utils.py:364
 msgctxt "month name"
 msgid "November"
-msgstr "１１月"
+msgstr "11月"
 
 #. Translators: this is a month name that will be used when displaying
 #. dates, as in "December 10, 2014". It is used for the %B directive in
@@ -745,7 +745,7 @@ msgstr "１１月"
 #: common/djangoapps/util/date_utils.py:368
 msgctxt "month name"
 msgid "December"
-msgstr "１２月"
+msgstr "12月"
 
 #: common/djangoapps/util/password_policy_validators.py:23
 #, python-brace-format

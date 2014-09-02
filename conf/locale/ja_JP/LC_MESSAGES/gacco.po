@@ -303,7 +303,7 @@ msgstr "アンケート結果ダウンロード"
 
 #: lms/templates/instructor/instructor_dashboard_2/survey.html
 msgid "The survey result can be downloaded as a CSV file."
-msgstr "アンケート結果がCSVファイルでダウンロードできます。"
+msgstr "アンケート結果がCSVファイルでダウンロードできます。<br />CSVファイルをそのままExcelで開こうとすると、日本語が含まれている場合に文字化けしてしまいますので、一旦ファイルを保存した後、「UTF-8」に対応したテキストエディタで開き直してください。"
 
 #: lms/templates/instructor/instructor_dashboard_2/survey.html
 msgid "Get Survey CSV"
@@ -744,3 +744,46 @@ msgstr "このレポートに対する採点を完了し、次のステップへ
 
 msgid "Assessments of Your Response"
 msgstr "あなたのレポートに対する評価"
+
+#: /edx/app/edxapp/venvs/edxapp/src/edx-ora2/apps/openassessment/templates/openassessmentblock/peer/oa_peer_complete.html
+msgid "Continue Assessing Peers"
+msgstr "採点を続ける　"
+
+msgid "Completed"
+msgstr "完了"
+
+msgid "We could not retrieve additional submissions for assessment"
+msgstr "採点が必要なレポート提出はありません"
+
+#: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+msgid "Progress Report"
+msgstr "進捗レポート"
+
+##: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+#msgid "Student Progress"
+#msgstr "受講者の進捗"
+
+#: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+msgid "Current CSV: created "
+msgstr "現行のCSV：作成日時 "
+
+#: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+msgid "Download Progress Report"
+msgstr "進捗レポートのダウンロード"
+
+#: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+msgid "Generate Progress Report"
+msgstr "進捗レポートの作成"
+
+#: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+msgid "Summary Progress"
+msgstr "進捗サマリ"
+
+#: lms/templates/instructor/instructor_dashboard_2/progress_report.html
+msgid "Problem Module Progress"
+msgstr "Problemモジュールの進捗"
+
+#: lms/templates/instructor/instructor_dashboard_2/data_download.html
+#: lms/templates/instructor/instructor_dashboard_2/student_admin.html
+msgid "You do not have permission to use this function."
+msgstr "この機能を使用する権限がありません。"

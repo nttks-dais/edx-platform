@@ -170,16 +170,17 @@ $ ->
       imageUploadHandler = (elem, input) ->
         ajaxFileUpload(imageUploadUrl, input, imageUploadHandler)
 
-      editor = new Markdown.Editor(
-        converter,
-        appended_id, # idPostfix
-        null, # help handler
-        imageUploadHandler
-      )
-      delayRenderer = new MathJaxDelayRenderer()
-      editor.hooks.chain "onPreviewPush", (text, previewSet) ->
-        delayRenderer.render
-          text: text
-          previewSetter: previewSet
-      editor.run()
-      editor
+      if not $elem.find(".wmd-button-row").length
+        editor = new Markdown.Editor(
+          converter,
+          appended_id, # idPostfix
+          null, # help handler
+          imageUploadHandler
+        )
+        delayRenderer = new MathJaxDelayRenderer()
+        editor.hooks.chain "onPreviewPush", (text, previewSet) ->
+          delayRenderer.render
+            text: text
+            previewSetter: previewSet
+        editor.run()
+        editor

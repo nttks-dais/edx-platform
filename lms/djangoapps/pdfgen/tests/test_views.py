@@ -253,7 +253,7 @@ class CertS3StoreSuccesses(TestCase):
         self.username = "testusername"
         self.course_id = "org/num/run"
         self.filepath = "/file/is/not/exists"
-        self.bucket_name = settings.PDFGEN_BUCKENT_NAME
+        self.bucket_name = settings.PDFGEN_BUCKET_NAME
 
         patcher0 = patch('pdfgen.views.logging')
         self.log = patcher0.start()
@@ -305,7 +305,7 @@ class CertS3StoreErrors(TestCase):
         self.username = "testusername"
         self.course_id = "org/num/run"
         self.filepath = "/file/is/not/exists"
-        self.bucket_name = settings.PDFGEN_BUCKENT_NAME
+        self.bucket_name = settings.PDFGEN_BUCKET_NAME
         self.location = Location.APNortheast
 
         patcher0 = patch('pdfgen.views.logging')

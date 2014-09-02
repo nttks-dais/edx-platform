@@ -586,7 +586,7 @@ msgstr "閉じる"
 
 #: lms/templates/dashboard.html:352
 msgid "Email Settings for {course_number}"
-msgstr "{course_number}のメールアドレス設定"
+msgstr "{course_number}のメール受信設定"
 
 #. Translators: this text gives status on if the modal interface (a menu or
 #. piece of UI that takes the full focus of the screen) is open or not
@@ -3202,7 +3202,7 @@ msgstr "履修解除してよろしいですか？（認証済み {cert_name_lon
 
 #: lms/templates/dashboard/_dashboard_course_listing.html:149
 msgid "Email Settings"
-msgstr "メールアドレス設定"
+msgstr "メール受信設定"
 
 #: lms/templates/dashboard/_dashboard_prompt_midcourse_reverify.html:10
 #: lms/templates/dashboard/_dashboard_prompt_midcourse_reverify.html:41
@@ -3563,7 +3563,7 @@ msgstr "コメントを追加..."
 
 #: lms/templates/discussion/_underscore_templates.html:133
 msgid "endorse"
-msgstr "下書き"
+msgstr "その通り！"
 
 #: lms/templates/discussion/_underscore_templates.html:154
 msgid "Editing response"

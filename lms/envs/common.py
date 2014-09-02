@@ -1271,6 +1271,7 @@ INSTALLED_APPS = (
 
     # Certificate generator
     'pdfgen',
+    'pgreport',
 )
 
 ######################### MARKETING SITE ###############################

@@ -65,6 +65,8 @@
       $("#email_settings_course_number").text( $(event.target).data("course-number") );
       if($(event.target).data("optout") == "False") {
         $("#receive_emails").prop('checked', true);
+      } else {
+        $("#receive_emails").prop('checked', false);
       }
     });
 

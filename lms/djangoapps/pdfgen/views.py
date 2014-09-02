@@ -256,7 +256,7 @@ class CertStoreBase(object):
 class CertS3Store(CertStoreBase):
     """S3 store."""
     def __init__(self):
-        self.bucket_name = settings.PDFGEN_BUCKENT_NAME
+        self.bucket_name = settings.PDFGEN_BUCKET_NAME
         self.location = Location.APNortheast
         self.conn = self._connect()
 

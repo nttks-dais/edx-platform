@@ -70,6 +70,9 @@ from .tools import (
     bulk_email_is_enabled_for_course,
 )
 from xmodule.modulestore import Location
+from xmodule.contentstore.django import contentstore
+from xmodule.exceptions import NotFoundError
+
 
 log = logging.getLogger(__name__)
 
@@ -1307,14 +1310,14 @@ def get_survey(request, course_id):  # pylint: disable=W0613
     """
     def csv_response(filename, header, rows):
         """Returns a CSV http response for the given header and rows (excel/cp932)."""
+        import unicodecsv as csv
         response = HttpResponse(mimetype='text/csv')
         response['Content-Disposition'] = 'attachment; filename={0}'.format(filename)
         writer = csv.writer(response, dialect='excel', quotechar='"', quoting=csv.QUOTE_ALL)
-        encoded = [unicode(s).encode('cp932') for s in header]
+        encoded = [unicode(s).encode('utf-8') for s in header]
         writer.writerow(encoded)
         for row in rows:
-            # NOTE: this data is mostly Japanese, so encode cp932
-            encoded = [unicode(s).encode('cp932') for s in row]
+            encoded = [unicode(s).encode('utf-8') for s in row]
             writer.writerow(encoded)
         return response
 
@@ -1337,8 +1340,13 @@ def get_survey(request, course_id):  # pylint: disable=W0613
     ))
 
     if len(submissions) > 0:
-        keys = sorted(submissions[0].get_survey_answer().keys())
+        # NOTE: eliminate duplication of question names
+        keyset = set()
+        for s in submissions:
+            keyset.update(s.get_survey_answer().keys())
+        keys = sorted(keyset)
         header.extend(keys)
+
         for s in submissions:
             row = [s.unit_id, s.survey_name, s.created, s.username]
             row.append(dict(UserProfile.GENDER_CHOICES).get(s.gender, s.gender) or '')
@@ -1346,10 +1354,51 @@ def get_survey(request, course_id):  # pylint: disable=W0613
             row.append(dict(UserProfile.LEVEL_OF_EDUCATION_CHOICES).get(s.level_of_education, s.level_of_education) or '')
             row.append(s.account_status if s.account_status == UserStanding.ACCOUNT_DISABLED else '')
             for key in keys:
-                value = s.get_survey_answer().get(key)
+                value = s.get_survey_answer().get(key, '')
                 # NOTE: replace list into commified str
                 if isinstance(value, list):
                     value = ','.join(value)
                 row.append(value)
             rows.append(row)
     return csv_response(course_id.replace('/', '-') + '-survey.csv', header, rows)
+
+
+@ensure_csrf_cookie
+@handle_dashboard_error
+@common_exceptions_400
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+@require_level('staff')
+def create_pgreport_csv(request, course_id):
+    try:
+        instructor_task.api.submit_create_pgreport_csv(request, course_id)
+        success_status = _("Report is being generated! You can view the status of the generation task in the 'Pending Instructor Tasks' section.")
+        return JsonResponse({"status": success_status})
+    except AlreadyRunningError:
+        already_running_status = _("Report generation task is already in progress. Check the 'Pending Instructor Tasks' table for the status of the task. When completed, the report will be available for download in the table below.")
+        return JsonResponse({
+            "status": already_running_status
+        })
+
+
+@ensure_csrf_cookie
+@handle_dashboard_error
+@common_exceptions_400
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+@require_level('staff')
+def get_pgreport_csv(request, course_id):
+    """"""
+    tag = "i4x"
+    org, course, category = course_id.split('/')
+    loc = Location(tag, org, course, category="pgreport", name="progress_students.csv.gz")
+    store = contentstore()
+    try:
+        content = store.find(loc, throw_on_not_found=True, as_stream=True)
+    except NotFoundError as e:
+        return HttpResponseForbidden(e)
+
+    response = HttpResponse(content_type="application/x-gzip")
+    response['Content-Disposition'] = 'attachment; filename={}'.format(content.name)
+    for csv_data in content.stream_data():
+        response.write(csv_data)
+
+    return response
