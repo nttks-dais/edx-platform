@@ -120,6 +120,7 @@ def safe_exec(code, globals_dict, random_seed=None, python_path=None, cache=None
         exec_fn = codejail_safe_exec
 
     # Run the code!  Results are side effects in globals_dict.
+
     try:
         exec_fn(
             code_prolog + LAZY_IMPORTS + code, globals_dict,

@@ -11,8 +11,9 @@ def run_acceptance_tests(system, harvest_args)
     report_file = File.join(ACCEPTANCE_REPORT_DIR, "#{system}.xml")
     report_args = "--with-xunit --xunit-file #{report_file}"
     cmd = django_admin(
-        system, 'acceptance', 'harvest', '--debug-mode',
-        '--verbosity 2', report_args, harvest_args
+        #system, 'acceptance', 'harvest', '--debug-mode',
+        #'--verbosity 2', report_args, harvest_args
+        system, 'acceptance', 'harvest', report_args, harvest_args
     )
     test_sh("#{system} acceptance tests", cmd)
 end

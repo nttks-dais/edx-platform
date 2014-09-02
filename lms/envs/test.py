@@ -259,7 +259,7 @@ FILE_UPLOAD_HANDLERS = (
 # These ports are carefully chosen so that if the browser needs to
 # access them, they will be available through the SauceLabs SSH tunnel
 LETTUCE_SERVER_PORT = 8003
-XQUEUE_PORT = 8040
+XQUEUE_PORT = 8041
 YOUTUBE_PORT = 8031
 LTI_PORT = 8765
 VIDEO_SOURCE_PORT = 8777

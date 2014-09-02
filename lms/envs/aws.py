@@ -427,3 +427,17 @@ FB_DESC = ENV_TOKENS.get('FB_DESC', "")
 FB_URL = ENV_TOKENS.get('FB_URL', "")
 FB_IMG = ENV_TOKENS.get('FB_IMG', "")
 FB_ACTION_TYPE = ENV_TOKENS.get('FB_ACTION_TYPE', "")
+
+
+from celery.schedules import crontab
+from datetime import timedelta
+CELERY_TIMEZONE = ENV_TOKENS.get('CELERY_TIMEZONE', TIME_ZONE)
+CELERYBEAT_SCHEDULE = {
+    # Executes everyday at 2:30 A.M
+    'push_update_table_task': {
+        'task': 'pgreport.tasks.update_table_task_for_active_course',
+        'schedule': crontab(minute="*/5"),
+        #'schedule': timedelta(seconds=90),
+        #'args': ("pg_org/pg_cn/pg_run",),
+    },
+}

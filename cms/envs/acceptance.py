@@ -113,7 +113,8 @@ USE_I18N = True
 # Include the lettuce app for acceptance testing, including the 'harvest' django-admin command
 INSTALLED_APPS += ('lettuce.django',)
 LETTUCE_APPS = ('contentstore',)
-LETTUCE_BROWSER = os.environ.get('LETTUCE_BROWSER', 'chrome')
+#LETTUCE_BROWSER = os.environ.get('LETTUCE_BROWSER', 'chrome')
+LETTUCE_BROWSER = os.environ.get('LETTUCE_BROWSER', 'firefox')
 
 # Where to run: local, saucelabs, or grid
 LETTUCE_SELENIUM_CLIENT = os.environ.get('LETTUCE_SELENIUM_CLIENT', 'local')

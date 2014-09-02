@@ -583,17 +583,24 @@ def push_students_report(_xmodule_instance_args, _entry_id, course_id, _task_inp
     start_time = datetime.now(UTC)
     status = True
 
-    def update_task_progress():
+    def update_task_progress(state):
         """Return a dict containing info about current task"""
         current_time = datetime.now(UTC)
+
+        status, data = state.split(' ')
+        attempted, total = data.split('/')
+        entry = InstructorTask.objects.get(pk=_entry_id)
+
         progress = {
             'action_name': action_name,
-            'success': status,
+            'attempted': int(attempted),
+            'succeeded': int(attempted),
+            'total': int(total),
             'duration_ms': int((current_time - start_time).total_seconds() * 1000),
         }
-        _get_current_task().update_state(state=PROGRESS, meta=progress)
+        entry.task_state = PROGRESS
+        entry.task_output = InstructorTask.create_output_for_success(progress)
+        entry.save_now()
+        #_get_current_task().update_state(state=status, meta=progress)
 
-        return progress
-
-    create_pgreport_csv(course_id)
-    return update_task_progress()
+    create_pgreport_csv(course_id, update_task_progress)

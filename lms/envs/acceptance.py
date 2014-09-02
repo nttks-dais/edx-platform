@@ -164,7 +164,8 @@ LETTUCE_APPS = ('courseware', 'instructor',)
 # As a quick workaround, explicitly exclude the `instructor_task` app.
 LETTUCE_AVOID_APPS = ('instructor_task',)
 
-LETTUCE_BROWSER = os.environ.get('LETTUCE_BROWSER', 'chrome')
+#LETTUCE_BROWSER = os.environ.get('LETTUCE_BROWSER', 'chrome')
+LETTUCE_BROWSER = os.environ.get('LETTUCE_BROWSER', 'firefox')
 
 # Where to run: local, saucelabs, or grid
 LETTUCE_SELENIUM_CLIENT = os.environ.get('LETTUCE_SELENIUM_CLIENT', 'local')

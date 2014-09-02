@@ -47,9 +47,10 @@ class UserDoesNotExists(ProgressReportException):
 class ProgressReport(object):
     """Progress report class."""
 
-    def __init__(self, course_id, debug=False):
+    def __init__(self, course_id, update_state=None, debug=False):
         """Initialize."""
         self.course_id = course_id
+        self.update_state = update_state
         self.debug = debug
         self.module_summary = {}
         self.module_statistics = {}
@@ -226,10 +227,13 @@ class ProgressReport(object):
             if (student_count % 100 == 0) or (
                 student_count == self.courseware_summary['active_students']
             ):
+                msg = "Progress %d/%d" % (
+                    student_count, self.courseware_summary['active_students'])
 
-                log.info("Progress %d/%d (current student: %s)" % (
-                    student_count, self.courseware_summary['active_students'],
-                    student.username))
+                if self.update_state is not None:
+                    self.update_state(state=msg)
+
+                log.info(msg)
 
             self.request.user = student
             grade = grades.grade(student, self.request, self.course)
@@ -242,7 +246,7 @@ class ProgressReport(object):
                     module = get_module_for_student(student, self.course, loc)
 
                     if module is None:
-                        log.warn(" * WARNING: No state found: %s" % (student))
+                        log.debug(" * No state found: %s" % (student))
                         continue
 
                     module_data = self._get_module_data(module)
@@ -276,7 +280,20 @@ class ProgressReport(object):
             return self.courseware_summary
 
         self.courseware_summary["graded_students"] = 0
+        student_count = 0
         for student in self.students.iterator():
+            student_count += 1
+            if (student_count % 100 == 0) or (
+                student_count == self.courseware_summary['active_students']
+            ):
+                msg = "Progress %d/%d" % (
+                    student_count, self.courseware_summary['active_students'])
+
+                if self.update_state is not None:
+                    self.update_state(state=msg)
+
+                log.info(msg)
+
             self.request.user = student
             log.debug(" * Active user: {}".format(student))
             grade = grades.grade(student, self.request, self.course)
@@ -293,7 +310,7 @@ class ProgressReport(object):
                     module = get_module_for_student(student, self.course, loc)
 
                     if module is None:
-                        log.warn(" * WARNING: No state found: %s" % (student))
+                        log.debug(" * No state found: %s" % (student))
                         continue
 
                     self.collect_module_summary(module)
@@ -334,28 +351,26 @@ def get_pgreport_csv(course_id):
         gzipcsv.close()
 
     except NotFoundError as e:
-        log.warn(" * WARNING: Csv does not exists: {}".format(e))
+        log.warn(" * Csv does not exists: {}".format(e))
         raise
 
     finally:
         gzipfile.close()
 
 
-def create_pgreport_csv(course_id):
+def create_pgreport_csv(course_id, update_state):
     """Create CSV of progress to MongoDB."""
     tag = "i4x"
     org, course, category = course_id.split('/')
     loc = Location(tag, org, course, category="pgreport", name="progress_students.csv.gz")
     content = StaticContent(loc, "progress_students.csv.gz", "application/x-gzip", "dummy-data")
     content_id = content.get_id()
-    store = contentstore()
-    store.delete(content_id)
 
     try:
         gzipfile = StringIO.StringIO()
         gzipcsv = gzip.GzipFile(fileobj=gzipfile, mode='wb')
         writer = csv.writer(gzipcsv, encoding='utf-8')
-        progress = ProgressReport(course_id)
+        progress = ProgressReport(course_id, update_state)
 
         for row in progress.yield_students_progress():
             writer.writerow(row)
@@ -364,6 +379,9 @@ def create_pgreport_csv(course_id):
         gzipcsv.close()
 
     try:
+        store = contentstore()
+        store.delete(content_id)
+
         with store.fs.new_file(
             _id=content_id, filename=content.get_url_path(),
             content_type=content.content_type, displayname=content.name,
@@ -407,9 +425,13 @@ def get_pgreport_table(course_id):
     return summary, modules
 
 
-def update_pgreport_table(course_id):
+def update_pgreport_table(course_id, update_state=None):
     """Update table of progress_modules."""
-    progress = ProgressReport(course_id)
+    match = Location.COURSE_ID_RE.match(course_id)
+    if match is None:
+        raise ValueError("{} is not of form ORG/COURSE/NAME".format(course_id))
+
+    progress = ProgressReport(course_id, update_state)
     modules = progress.get_raw(command="modules")
 
     for loc, params in modules.items():
