@@ -26,7 +26,8 @@ class GeneratedCertificateFactory(DjangoModelFactory):
     key = "012345678901234567890123456789ab"
     distinction = False
     status = "downloadable"
-    mode = 'honor'
+    #mode = 'honor'
+    mode = GeneratedCertificate.MODES.honor
     name = "testuser"
     created_date = datetime.now(UTC)
     modified_date = datetime.now(UTC)

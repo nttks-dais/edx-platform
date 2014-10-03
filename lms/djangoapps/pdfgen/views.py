@@ -33,6 +33,10 @@ class CertException(Exception):
     pass
 
 
+class InvalidSettings(CertException):
+    pass
+
+
 class PDFBaseNotFound(CertException):
     pass
 
@@ -68,7 +72,7 @@ class CertificateHonor(CertificateBase):
     """Certificate of Honor"""
 
     def __init__(self, username, course_id, key, display_name=None,
-        course_name=None, grade=None):
+                 course_name=None, grade=None, file_prefix=""):
 
         self.username = username
         self.display_name = display_name
@@ -76,6 +80,7 @@ class CertificateHonor(CertificateBase):
         self.course_name = course_name
         self.grade = grade
         self.key = key
+        self.file_prefix = file_prefix
         self.store = CertS3Store()
         """
         self.enroll_mode = "honor"
@@ -95,21 +100,25 @@ class CertificateHonor(CertificateBase):
             return json.dumps({"error": msg})
 
         try:
-            temp = mkstemp(suffix="-certificate.pdf")
+            fd, path = mkstemp(suffix="-certificate.pdf")
 
-            with open(temp[1], 'wb') as fp:
-                form = CertPDF(fp, self.display_name, self.course_id,
-                    self.course_name)
+            with open(path, 'wb') as fp:
+                form = CertPDF(
+                    fp, self.display_name, self.course_id,
+                    self.course_name, self.file_prefix)
                 form.create_pdf()
 
-            response_json = self.store.save("_".join([self.username, self.key[:5]]),
-                self.course_id, temp[1])
+            response_json = self.store.save(
+                "_".join([self.username, self.key[:5]]),
+                self.course_id, path)
+
         except OSError, e:
-            msg = "OS Error: (%s)" % (e)
+            msg = "OS Error: ({})".format(e)
             return json.dumps({"error": msg})
         finally:
             try:
-                os.remove(temp[1])
+                os.close(fd)
+                os.remove(path)
             except UnboundLocalError:
                 pass
 
@@ -121,55 +130,61 @@ class CertificateHonor(CertificateBase):
 
 
 class CertPDF(object):
-    def __init__(self, fp, username, course_id, course_name):
+    def __init__(self, fp, username, course_id, course_name, file_prefix=""):
         self.fp = fp
         self.username = username
         self.course_id = course_id
         self.course_name = course_name
         self.author = settings.PDFGEN_CERT_AUTHOR
         self.title = settings.PDFGEN_CERT_TITLE
-        self.base_img_dir = settings.PDFGEN_BASE_IMG_DIR
         self.base_pdf_dir = settings.PDFGEN_BASE_PDF_DIR
+        #self.base_img_dir = settings.PDFGEN_BASE_IMG_DIR
+        self.prefix = file_prefix
 
-        pdfmetrics.registerFont(TTFont("Ubuntu-R",
-            "/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf"))
-        pdfmetrics.registerFont(TTFont("VL-Gothic-Regular",
-            "/usr/share/fonts/truetype/vlgothic/VL-Gothic-Regular.ttf"))
-
-        """
-        pdfmetrics.registerFont(UnicodeCIDFont("HeiseiKakuGo-W5"))
-        pdfmetrics.registerFont(UnicodeCIDFont("HeiseiMin-W3"))
-        """
+        pdfmetrics.registerFont(
+            TTFont(
+                "Ubuntu-R",
+                "/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf"))
+        pdfmetrics.registerFont(
+            TTFont(
+                "VL-Gothic-Regular",
+                "/usr/share/fonts/truetype/vlgothic/VL-Gothic-Regular.ttf"))
 
     def create_pdf(self):
         """ crate pdf """
         if os.path.isdir(self.base_pdf_dir):
-            base_pdf = self.base_pdf_dir + "/" + "-".join(
+            base_pdf = self.base_pdf_dir + "/" + self.prefix + "-".join(
                 self.course_id.split('/')) + ".pdf"
             self.create_based_on_pdf(base_pdf)
             return
 
+        """
         if os.path.isdir(self.base_img_dir):
-            base_img = self.base_img_dir + "/" + "-".join(
+            base_img = self.base_img_dir + "/" + self.prefix + "-".join(
                 self.course_id.split('/')) + ".pdf"
             self.create_based_on_image(base_pdf)
             return
 
         msg = "settings.PDFGEN_BASE_PDF_DIR" + \
-            "(%s) and settings.PDFGEN_BASE_IMG_DIR(%s) dose not exists." % (
+            "({}) and settings.PDFGEN_BASE_IMG_DIR({}) dose not exists.".format(
             self.base_pdf_dir, self.base_img_dir)
+        """
+
+        msg = "settings.PDFGEN_BASE_PDF_DIR ({}) dose not exists.".format(
+            self.base_pdf_dir)
         log.error(msg)
         raise PDFBaseNotFound(msg)
 
     def create_based_on_pdf(self, base_pdf):
         """create pdf based on pdf"""
         if not os.path.isfile(base_pdf):
-            msg = "%s is not exists." % (base_pdf)
+            msg = "{} is not exists.".format(base_pdf)
             log.error(msg)
             raise PDFBaseNotFound(msg)
 
         fileobj = StringIO.StringIO()
-        pdf = canvas.Canvas(fileobj, bottomup=True,
+        pdf = canvas.Canvas(
+            fileobj, bottomup=True,
             pageCompression=1, pagesize=landscape(A4))
 
         pdf.setFont("VL-Gothic-Regular", 27)
@@ -190,8 +205,9 @@ class CertPDF(object):
             page.mergePage(merge.getPage(0))
 
             output = PdfFileWriter()
-            output.addMetadata({'/Title': self.title, '/Author': self.author,
-                '/Subject': u"{}".format(self.course_name)})
+            output.addMetadata(
+                {'/Title': self.title, '/Author': self.author,
+                 '/Subject': u"{}".format(self.course_name)})
 
             output.addPage(page)
             output.write(self.fp)
@@ -202,11 +218,12 @@ class CertPDF(object):
     def create_based_on_image(self, base_img):
         """create pdf based on image"""
         if not os.path.isfile(base_img):
-            msg = "%s is not exists." % (base_img)
+            msg = "{} is not exists.".format(base_img)
             log.error(msg)
             raise PDFBaseNotFound(msg)
 
-        pdf = canvas.Canvas(self.fp, bottomup=True,
+        pdf = canvas.Canvas(
+            self.fp, bottomup=True,
             pageCompression=1, pagesize=landscape(A4))
         pdf.setAuthor(self.author)
         pdf.setTitle(self.title)
@@ -256,14 +273,21 @@ class CertStoreBase(object):
 class CertS3Store(CertStoreBase):
     """S3 store."""
     def __init__(self):
+        if None in (settings.PDFGEN_BUCKET_NAME,
+                    settings.PDFGEN_ACCESS_KEY_ID,
+                    settings.PDFGEN_SECRET_ACCESS_KEY):
+
+            raise InvalidSettings(
+                "PDFGEN_BUCKET_NAME, PDFGEN_ACCESS_KEY_ID or PDFGEN_SECRET_ACCESS_KEY is None.")
+
         self.bucket_name = settings.PDFGEN_BUCKET_NAME
+        self.access_key = settings.PDFGEN_ACCESS_KEY_ID
+        self.secret_key = settings.PDFGEN_SECRET_ACCESS_KEY
         self.location = Location.APNortheast
         self.conn = self._connect()
 
     def _connect(self):
-        return S3Connection(
-            settings.PDFGEN_ACCESS_KEY_ID,
-            settings.PDFGEN_SECRET_ACCESS_KEY)
+        return S3Connection(self.access_key, self.secret_key)
 
     def save(self, username, course_id, filepath):
         """Save certificate."""
@@ -271,7 +295,8 @@ class CertS3Store(CertStoreBase):
             bucket = self.conn.get_bucket(self.bucket_name)
         except S3ResponseError as e:
             if e.status == 404:
-                bucket = self.conn.create_bucket(self.bucket_name,
+                bucket = self.conn.create_bucket(
+                    self.bucket_name,
                     location=self.location)
                 log.info("Cresate bucket(%s)", self.bucket_name)
             else:
@@ -284,8 +309,8 @@ class CertS3Store(CertStoreBase):
 
             # headers meta? encrypt_key true?
             s3key.set_contents_from_filename(filepath)
-            url = s3key.generate_url(expires_in=0, query_auth=False,
-                 force_http=True)
+            url = s3key.generate_url(
+                expires_in=0, query_auth=False, force_http=True)
         finally:
             s3key.close()
 
@@ -309,12 +334,12 @@ class CertS3Store(CertStoreBase):
         return json.dumps({'error': None})
 
 
-def create_cert_pdf(username, course_id, key, display_name, course_name,
-    grade):
+def create_cert_pdf(username, course_id, key, display_name,
+                    course_name, grade, file_prefix=""):
     """Create pdf of certificate."""
     try:
         cert = CertificateHonor(username, course_id, key, display_name,
-             course_name, grade)
+                                course_name, grade, file_prefix)
         contents = cert.create()
     except BotoServerError as e:
         log.error("Cannot get bucket: BotoServerError = %s", e)
