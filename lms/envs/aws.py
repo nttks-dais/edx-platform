@@ -207,6 +207,7 @@ THEME_NAME = ENV_TOKENS.get('THEME_NAME', None)
 
 # Marketing link overrides
 MKTG_URL_LINK_MAP.update(ENV_TOKENS.get('MKTG_URL_LINK_MAP', {}))
+MKTG_URL_LINK_MAP_URLS = ENV_TOKENS.get('MKTG_URL_LINK_MAP_URLS', {})
 
 # Timezone overrides
 TIME_ZONE = ENV_TOKENS.get('TIME_ZONE', TIME_ZONE)
