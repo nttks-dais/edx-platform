@@ -12,6 +12,7 @@ from django.test.client import RequestFactory
 from ga_survey.models import SurveySubmission
 from ga_survey.tests.factories import SurveySubmissionFactory
 from ga_survey.views import survey_init, survey_ajax
+from opaque_keys.edx.locator import CourseLocator
 from student.tests.factories import UserFactory
 
 
@@ -26,7 +27,7 @@ class SuveyTests(TestCase):
 
     def setUp(self):
         self.user = UserFactory.create()
-        self.course_id = 'edX/test/course1'
+        self.course_id = CourseLocator.from_string('edX/test/course1')
         self.unit_id = '22222222222222222222222222222222'
         self.survey_name = 'survey #2'
         self.survey_answer = '{"Q1": "1", "Q2": ["2", "3"], "Q3": "test"}'

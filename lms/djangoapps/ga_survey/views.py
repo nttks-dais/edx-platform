@@ -10,6 +10,7 @@ from django_future.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
 from ga_survey.models import SurveySubmission
+from opaque_keys.edx.locator import CourseLocator
 from util.json_request import JsonResponse
 
 
@@ -30,7 +31,7 @@ def survey_init(request):
 
     try:
         submission = SurveySubmission.objects.filter(
-            course_id=course_id,
+            course_id=CourseLocator.from_string(course_id),
             unit_id=unit_id,
             user=request.user
         ).order_by('created')[0:1].get()
@@ -78,7 +79,7 @@ def survey_ajax(request):
 
     try:
         submission = SurveySubmission.objects.filter(
-            course_id=course_id,
+            course_id=CourseLocator.from_string(course_id),
             unit_id=unit_id,
             user=request.user
         ).order_by('created')[0:1].get()
@@ -91,7 +92,7 @@ def survey_ajax(request):
         })
 
     submission = SurveySubmission(
-        course_id=course_id,
+        course_id=CourseLocator.from_string(course_id),
         unit_id=unit_id,
         user=request.user,
         survey_name=survey_name,
