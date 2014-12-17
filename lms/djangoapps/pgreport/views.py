@@ -15,7 +15,9 @@ import StringIO
 import gzip
 
 from .models import ProgressModules
-from xmodule.modulestore import Location
+from opaque_keys import InvalidKeyError
+from opaque_keys.edx.keys import CourseKey, AssetKey
+from opaque_keys.edx.locator import CourseLocator
 from xmodule.contentstore.content import StaticContent
 from xmodule.contentstore.django import contentstore
 from gridfs.errors import GridFSError
@@ -49,12 +51,18 @@ class ProgressReport(object):
 
     def __init__(self, course_id, update_state=None, debug=False):
         """Initialize."""
-        self.course_id = course_id
+        self.course_id = get_coursekey(course_id)
         self.update_state = update_state
         self.debug = debug
         self.module_summary = {}
-        self.module_statistics = {}
+        """
+        if isinstance(self.course_id, CourseKey):
+            self.course = get_course(self.course_id)
+        else:
+            self.course = get_course(CourseKey.from_string(self.course_id))
+        """
         self.course = get_course(self.course_id)
+
         self.request = self._create_request()
         self.enroll_count, self.active_count, self.students = self.get_active_students(
             self.course_id)
@@ -70,8 +78,10 @@ class ProgressReport(object):
     @staticmethod
     def get_active_students(course_id):
         """Get active enrolled students."""
+        course_key = get_coursekey(course_id)
         enrollments = User.objects.filter(
-            courseenrollment__course_id__exact=course_id)
+            courseenrollment__course_id__exact=course_key)
+
         active_students = enrollments.filter(is_active=1).exclude(
             standing__account_status__exact=UserStanding.ACCOUNT_DISABLED)
 
@@ -167,11 +177,15 @@ class ProgressReport(object):
         module_data = self._get_module_data(module)
         corrects = module_data["correct_map"]
         student_answers = module_data["student_answers"]
-        score, total = module.get_progress().frac()
+        module_progress = module.get_progress()
+        if module_progress is None:
+            score = total = 0
+        else:
+            score, total = module_progress.frac()
 
-        if not self.module_statistics.has_key(name):
-            self.module_statistics[name] = []
-        self.module_statistics[name].append(float(score))
+        #if not self.module_statistics.has_key(name):
+        #    self.module_statistics[name] = []
+        #self.module_statistics[name].append(float(score))
 
         if self.module_summary.has_key(name):
             for unit_id, value in corrects.items():
@@ -195,7 +209,7 @@ class ProgressReport(object):
         self.module_summary[name]["total_score"] += float(total)
         self.module_summary[name]["count"] += 1
 
-        if module.is_submitted():
+        if hasattr(module, "is_submitted"):
             self.module_summary[name]["submit_count"] += 1
 
     def _get_children_rec(self, course, parent=None):
@@ -243,7 +257,7 @@ class ProgressReport(object):
                     continue
 
                 for loc in self.location_list[category]:
-                    module = get_module_for_student(student, self.course, loc)
+                    module = get_module_for_student(student, loc)
 
                     if module is None:
                         log.debug(" * No state found: %s" % (student))
@@ -307,7 +321,7 @@ class ProgressReport(object):
 
                 for loc in self.location_list[category]:
                     log.debug(" * Active location: {}".format(loc))
-                    module = get_module_for_student(student, self.course, loc)
+                    module = get_module_for_student(student, loc)
 
                     if module is None:
                         log.debug(" * No state found: %s" % (student))
@@ -321,9 +335,9 @@ class ProgressReport(object):
             timeout=24 * 60 * 60
         )
 
-        statistics = self._calc_statistics()
-        for key in statistics.keys():
-            self.module_summary[key].update(statistics[key])
+        #statistics = self._calc_statistics()
+        #for key in statistics.keys():
+        #    self.module_summary[key].update(statistics[key])
 
         if command == "modules":
             return self.module_summary
@@ -331,16 +345,19 @@ class ProgressReport(object):
         return self.courseware_summary, self.module_summary
 
 
+def get_coursekey(course_id):
+    return CourseKey.from_string(course_id) if not isinstance(course_id, CourseKey) else course_id
+
+
 def get_pgreport_csv(course_id):
     """Get progress of students."""
-    tag = "i4x"
-    org, course, category = course_id.split('/')
-    loc = Location(tag, org, course, category="pgreport", name="progress_students.csv.gz")
+    course_key = get_coursekey(course_id)
+    location = StaticContent.compute_location(course_key, "progress_students.csv.gz")
     store = contentstore()
 
     try:
         gzipfile = StringIO.StringIO()
-        content = store.find(loc, throw_on_not_found=True, as_stream=True)
+        content = store.find(location, throw_on_not_found=True, as_stream=True)
         for gzipdata in content.stream_data():
             gzipfile.write(gzipdata)
 
@@ -352,7 +369,6 @@ def get_pgreport_csv(course_id):
 
     except NotFoundError as e:
         log.warn(" * Csv does not exists: {}".format(e))
-        raise
 
     finally:
         gzipfile.close()
@@ -360,17 +376,13 @@ def get_pgreport_csv(course_id):
 
 def create_pgreport_csv(course_id, update_state=None):
     """Create CSV of progress to MongoDB."""
-    tag = "i4x"
-    org, course, category = course_id.split('/')
-    loc = Location(tag, org, course, category="pgreport", name="progress_students.csv.gz")
-    content = StaticContent(loc, "progress_students.csv.gz", "application/x-gzip", "dummy-data")
-    content_id = content.get_id()
+    course_key = get_coursekey(course_id)
 
     try:
         gzipfile = StringIO.StringIO()
         gzipcsv = gzip.GzipFile(fileobj=gzipfile, mode='wb')
         writer = csv.writer(gzipcsv, encoding='utf-8')
-        progress = ProgressReport(course_id, update_state)
+        progress = ProgressReport(course_key, update_state)
 
         for row in progress.yield_students_progress():
             writer.writerow(row)
@@ -379,18 +391,13 @@ def create_pgreport_csv(course_id, update_state=None):
         gzipcsv.close()
 
     try:
-        store = contentstore()
-        store.delete(content_id)
-
-        with store.fs.new_file(
-            _id=content_id, filename=content.get_url_path(),
-            content_type=content.content_type, displayname=content.name,
-            thumbnail_location=content.thumbnail_location,
-            import_path=content.import_path,
-            locked=getattr(content, 'locked', False)
-        ) as fp:
-
-            fp.write(gzipfile.getvalue())
+        content_loc = StaticContent.compute_location(course_key, "progress_students.csv.gz")
+        content = StaticContent(
+            loc=content_loc,
+            name="progress_students.csv.gz",
+            content_type="text/comma-separated-values",
+            data=gzipfile.getvalue())
+        contentstore().save(content)
 
     except GridFSError as e:
         store.delete(content_id)
@@ -403,19 +410,19 @@ def create_pgreport_csv(course_id, update_state=None):
 
 def delete_pgreport_csv(course_id):
     """Delete CSV of progress to MongoDB."""
-    tag = "i4x"
-    org, course, category = course_id.split('/')
-    loc = Location(tag, org, course, category="pgreport", name="progress_students.csv.gz")
-    content = StaticContent(loc, "progress_students.csv.gz", "application/x-gzip", "dummy-data")
+    course_key = get_coursekey(course_id)
+    location = StaticContent.compute_location(course_key, "progress_students.csv.gz")
     store = contentstore()
+    content = store.find(location)
     store.delete(content.get_id())
 
 
 def get_pgreport_table(course_id):
     """Get table of progress_modules."""
-    progress = ProgressReport(course_id)
+    course_key = get_coursekey(course_id)
+    progress = ProgressReport(course_key)
     summary = progress.get_raw(command="summary")
-    modules_dict = ProgressModules.objects.filter(course_id=course_id).values()
+    modules_dict = ProgressModules.objects.filter(course_id=course_key).values()
     modules = {}
 
     for module in modules_dict:
@@ -427,17 +434,14 @@ def get_pgreport_table(course_id):
 
 def update_pgreport_table(course_id, update_state=None):
     """Update table of progress_modules."""
-    match = Location.COURSE_ID_RE.match(course_id)
-    if match is None:
-        raise ValueError("{} is not of form ORG/COURSE/NAME".format(course_id))
-
-    progress = ProgressReport(course_id, update_state)
+    course_key = get_coursekey(course_id)
+    progress = ProgressReport(course_key, update_state)
     modules = progress.get_raw(command="modules")
 
     for loc, params in modules.items():
         try:
             progress_entry = ProgressModules(
-                course_id=course_id,
+                course_id=course_key,
                 location=loc,
                 display_name=params["display_name"],
                 count=params["count"],
@@ -448,11 +452,11 @@ def update_pgreport_table(course_id, update_state=None):
                 start=params["start"],
                 due=params["due"],
                 correct_map=params["correct_map"],
-                student_answers=params["student_answers"],
-                mean=params["mean"],
-                median=params["median"],
-                variance=params["variance"],
-                standard_deviation=params["standard_deviation"])
+                student_answers=params["student_answers"])
+                #mean=params["mean"],
+                #median=params["median"],
+                #variance=params["variance"],
+                #standard_deviation=params["standard_deviation"])
             progress_entry.save()
         except DatabaseError as e:
             log.error(" * Database Error: {}".format(e))

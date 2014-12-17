@@ -5,7 +5,6 @@ from djcelery import celery
 from celery import Task, current_task
 from django.core.cache import cache
 from xmodule.modulestore.django import modulestore
-from xmodule.modulestore import Location
 from pgreport.views import update_pgreport_table, create_pgreport_csv
 from pgreport.views import UserDoesNotExists
 from datetime import datetime
@@ -13,15 +12,6 @@ import uuid
 from functools import partial
 import os
 import socket
-
-
-def check_course_id(course_id):
-    """Check course_id."""
-    match = Location.COURSE_ID_RE.match(course_id)
-    if match is None:
-        raise ProgressreportException(
-            "{} is not of form ORG/COURSE/NAME".format(course_id)
-        )
 
 
 class ProgressreportException(Exception):
@@ -98,7 +88,6 @@ class ProgressReportTask(object):
             raise ProgressreportException("Funcion is not celery task.")
 
         self.task_name = func.name
-        self.modulestore_name = 'default'
 
     def send_task(self, course_id):
         """Send task."""
@@ -109,18 +98,18 @@ class ProgressReportTask(object):
 
         task_id = str(uuid.uuid4())
         result = self.task_func.apply_async(
-            args=(task_id, course_id), task_id=task_id, expires=23.5*60*60, retry=False
+            args=(task_id, unicode(course_id)), task_id=task_id, expires=23.5*60*60, retry=False
         )
         task_state.set_task_state()
         print "Send task (task_id: %s)" % (result.id)
 
     def send_tasks(self):
         """Send task for all of active courses."""
-        store = modulestore(self.modulestore_name)
+        store = modulestore()
 
         for course in store.get_courses():
             if course.has_started() and not course.has_ended():
-                self.send_task(course.location.course_id)
+                self.send_task(course.id)
 
     def show_task_status(self, task_id):
         """Show current state of task."""
@@ -128,7 +117,7 @@ class ProgressReportTask(object):
         if result.state == "PENDING":
             print "Task not found or PENDING state"
         else:
-            print "Curent State: %s, %s" % (result.state, result.info)
+            print "Current State: %s, %s" % (result.state, result.info)
 
     def show_task_list(self):
         """A view that returns active tasks"""
@@ -162,11 +151,12 @@ class ProgressReportTask(object):
 @celery.task(base=BaseProgressReportTask)
 def update_table_task(task_id, course_id):
     """Update progress_modules."""
-    check_course_id(course_id)
     update_state = partial(
         update_table_task.update_state, task_id=task_id,
         meta={"hostname": socket.gethostname(), "pid": os.getpid()}
     )
+    import time
+    time.sleep(20)
 
     try: 
         update_pgreport_table(course_id, update_state)
@@ -179,7 +169,6 @@ def update_table_task(task_id, course_id):
 @celery.task(base=BaseProgressReportTask)
 def create_report_task(task_id, course_id):
     """Create progress report."""
-    check_course_id(course_id)
     update_state = partial(
         create_report_task.update_state, task_id=task_id, 
         meta={"hostname": socket.gethostname(), "pid": os.getpid()}
