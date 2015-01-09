@@ -47,3 +47,7 @@ msgstr "戻って、問題を解消してください"
 #: pollxblock/static/js/src/pollxblock.js
 msgid "Change your vote"
 msgstr "選びなおす"
+
+#: common/lib/xmodule/xmodule/js/src/capa/display.coffee
+msgid "Is this your final answer?"
+msgstr "解答を提出します。よろしいですか？"
