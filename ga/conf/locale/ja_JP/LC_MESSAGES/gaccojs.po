@@ -4,13 +4,14 @@
 #
 # Translators:
 # yokose-ks <ayokose.gacco@gmail.com>, 2014
+# watcafe, 2013-2015
 msgid ""
 msgstr ""
 "Project-Id-Version: edx-platform\n"
 "Report-Msgid-Bugs-To: openedx-translation@googlegroups.com\n"
 "POT-Creation-Date: 2015-01-05 10:00+0900\n"
 "PO-Revision-Date: 2015-01-05 10:00+0900\n"
-"Last-Translator: yokose-ks <ayokose.gacco@gmail.com>\n"
+"Last-Translator: watcafe\n"
 "Language-Team: Japanese (Japan) (http://www.transifex.com/projects/p/edx-platform/language/ja_JP/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -18,6 +19,28 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Language: ja_JP\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#-#-#-#-#  Deleted or revised messages between aspen.1(ca909e3) and master(9dd2220)  #-#-#-#-#
+
+#: cms/static/js/sock.js
+msgid "Hide Studio Help"
+msgstr "Studioのヘルプを隠す"
+
+#: cms/static/js/sock.js
+msgid "Looking for Help with Studio?"
+msgstr "Studioのヘルプをお探しですか？"
+
+#: cms/static/js/views/assets.js
+msgid "Uploading…"
+msgstr "アップロード中…"
+
+#: cms/static/js/views/section_edit.js
+msgid "Your change could not be saved"
+msgstr "変更は保存されませんでした"
+
+#: cms/static/js/views/section_edit.js
+msgid "Return and resolve this issue"
+msgstr "戻って、問題を解消してください"
 
 #-#-#-#-#  Original messages in gacco  #-#-#-#-#
 
