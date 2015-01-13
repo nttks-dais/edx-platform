@@ -1089,9 +1089,13 @@ def logout_user(request):
     # to perform logging on successful logouts.
     logout(request)
     if settings.FEATURES.get('AUTH_USE_CAS'):
-        response = redirect(reverse('cas-logout'))
+        redirect_uri = reverse('cas-logout')
     else:
-        response = redirect(marketing_link('ROOT'))
+        redirect_uri = marketing_link('ROOT')
+        if redirect_uri is None or redirect_uri == "#":
+            redirect_uri = '/'
+
+    response = redirect(redirect_uri)
     response.delete_cookie(
         settings.EDXMKTG_COOKIE_NAME,
         path='/', domain=settings.SESSION_COOKIE_DOMAIN,
