@@ -836,8 +836,8 @@ def _check_files_limits(files):
         # Check file sizes
         for inputfile in inputfiles:
             if inputfile.size > settings.STUDENT_FILEUPLOAD_MAX_SIZE:  # Bytes
-                msg = _('Submission aborted! Your file "%s" is too large (max size: %d MB)') % \
-                      (inputfile.name, settings.STUDENT_FILEUPLOAD_MAX_SIZE / (1000 ** 2))
+                msg = _('Submission aborted! Your file "%(file_name)s" is too large (max size: %(max_size)d MB)') % \
+                      {'file_name': inputfile.name, 'max_size': settings.STUDENT_FILEUPLOAD_MAX_SIZE / (1000 ** 2)}
                 return msg
 
     return None
