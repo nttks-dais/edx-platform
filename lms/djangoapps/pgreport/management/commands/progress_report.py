@@ -5,7 +5,6 @@ from optparse import make_option
 from django.core.management.base import BaseCommand, CommandError
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.locator import CourseLocator
-from pgreport.views import get_pgreport_csv, delete_pgreport_csv
 from xmodule.exceptions import NotFoundError
 from xmodule.modulestore.django import modulestore
 from django.core.management import call_command
@@ -49,6 +48,7 @@ class Command(BaseCommand):
         if not modulestore().get_course(course_id):
             raise CommandError("The specified course does not exist.")
 
+        """
         if delete_report:
             try:
                 delete_pgreport_csv(course_id)
@@ -62,3 +62,4 @@ class Command(BaseCommand):
                 get_pgreport_csv(course_id)
             except NotFoundError:
                 raise CommandError("CSV not found.")
+        """

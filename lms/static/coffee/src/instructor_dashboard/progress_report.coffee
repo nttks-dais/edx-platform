@@ -6,7 +6,6 @@ Progress Report
 # constructed with $section, a jquery object
 # which holds the section body container.
 std_ajax_err = -> window.InstructorDashboard.util.std_ajax_err.apply this, arguments
-PendingInstructorTasks = -> window.InstructorDashboard.util.PendingInstructorTasks
 
 class ProgressReport 
   constructor: (@$section) ->
@@ -15,29 +14,35 @@ class ProgressReport
     @$section.data 'wrapper', @
 
     # gather elements
-    @$pgreport_generate_btn = @$section.find("input[name='generate-pgreport-csv']'")
+    @$progress_grid_div = @$section.find("#ProgressGrid")
     @$pgreport_download_btn = @$section.find("input[name='download-pgreport-csv']'")
     @$pgreport_request_response       = @$section.find '.request-response'
     @$pgreport_request_response_error = @$section.find '.request-response-error'
 
-    @$pgreport_generate_btn.click (e) =>
-      @clear_display()
-      url = @$pgreport_generate_btn.data 'endpoint'
-      $.ajax
-        dataType: 'json'
-        url: url
-        error: std_ajax_err =>
-          @clear_display()
-          @$pgreport_request_response_error.text gettext("Error generating csv. Please try again.")
-          $(".msg-error").css({"display":"block"})
-        success: (data) =>
-          @clear_display()
-          @$pgreport_request_response.text data['status']
-          $(".msg-confirm").css({"display":"block"})
-
     @$pgreport_download_btn.click (e) =>
       url = @$pgreport_download_btn.data 'endpoint'
       location.href = url
+
+  loadData: ->
+    @clear_display()
+    course_structure_url = @$progress_grid_div.data 'endpoint-structure'
+    problems_data_url = @$progress_grid_div.data 'endpoint-problems'
+    #problems_data_url = @$progress_grid_div.data 'endpoint-problems'
+    url = @$progress_grid_div.data 'endpoint-problems'
+    ###
+    $.ajax
+      dataType: 'json'
+      url: url
+      error: std_ajax_err =>
+        @clear_display()
+        @$pgreport_request_response_error.text gettext("Error: Data load. Please try again.")
+        $(".msg-error").css({"display":"block"})
+      success: (data) =>
+        console.log(data)
+        @clear_display()
+        @$pgreport_request_response.text data['status']
+        $(".msg-confirm").css({"display":"block"})
+    ###
 
   clear_display: ->
     @$pgreport_request_response.empty()
@@ -46,6 +51,8 @@ class ProgressReport
     $(".msg-error").css({"display":"none"})
 
   onClickTitle: ->
+    @loadData()
+
   onExit: ->
 
 # export for use

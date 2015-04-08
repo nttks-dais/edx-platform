@@ -8,16 +8,243 @@
       <th><br/></th>
       <th>${section_data['course_display_name']}</th>
     </tr>
-    %for key in section_data["summary_keys"]:
     <tr>
-      <th>${key}</th>
-      <td>${section_data["summary_values"][key]}</td>
+      <th>${_("Enrollment counts")}</th>
+      <td>${section_data['course_enrollments']}</td>
     </tr>
-    %endfor
+    <tr>
+      <th>${_("Active student counts")}</th>
+      <td>${section_data['course_actives']}</td>
+    </tr>
   </table>
   <br/>
-  <hr>
 
+  <hr>
+  <h2> ${_("Problem Module Progress")} </h2>
+  <div id="ProgressGrid" style="height:600px;border:solid 1px" data-endpoint-structure="${ section_data['course_structure_url'] }" data-endpoint-problems="${ section_data['problem_data_url'] }"><i class="icon-spinner icon-spin icon-large"></i></div>
+  <br/>
+  <div>
+    <h2> ${_("Answer Distribution")} </h2>
+    <p id="SelectionStatus">${_("Select row in a table")}</p>
+    <div id="AnswerDistribution" style="height:300px;width:300px;"></div>
+  </div>
+
+  <br/>
+  <hr>
+  <div>
+    <h2> ${_("Score distribution map for OpenAssessment")} </h2>
+    <div id="ScoreDistribution" style="height:500px;width:1000px;"></div>
+  </div>
+  <script>
+    ##$("#placeholder").bind("plothover", function (event, pos, item) {
+    var drawBarChart = function(score_data) {
+      ##var scores_data = [[0,3],[1,8],[2,2],[3,11],[4,5],[5,30]];
+      ##var scores_data = [[3,0],[8,1],[2,2],[11,3],[5,4],[30,5]];
+      ##var ticks = [[0,"0-9"],[1,"10-19"],[2,"20-29"],[3,"30-39"],[4,"40-49"],[5,"50-59"]];
+
+      var data = [{
+        label: "test_label",
+        data: scores_data,
+        color: "blue"
+      }];
+      var options = {
+        series: {
+          bars: { show: true },
+        },
+        bars: {
+          align: "center",
+          barWidth: 0.3,
+          horizontal: true
+        },
+        xaxis: {
+          autoscaleMargin: 0.1,
+          axisLabel: "Number of students submitted",
+          axisLabelUseCanvas: true,
+          axisLabelFontSizePixels: 15,
+          axisLabelFontFamily: 'Meiryo',
+          axisLabelPadding: 15
+        },
+        yaxis: {
+          autoscaleMargin: 0.1,
+          axisLabel: "Score",
+          axisLabelUseCanvas: true,
+          axisLabelFontSizePixels: 15,
+          axisLabelFontFamily: 'Meiryo',
+          axisLabelPadding: 15,
+          ticks: ticks
+        },
+        legend: {
+          show: false
+        },
+        grid: {
+          hoverable: true,
+          borderWidth: 2,
+          backgroundColor: { colors: ["#ffffff", "#EDF5FF"] }
+        }
+      };
+      var plot = $.plot("#ScoreDistribution", data, options);
+    };
+
+    var drawPieChart = function(answers_data) {
+      var plot = $.plot("#AnswerDistribution", answers_data, {
+        series: {
+          pie: {
+            show: true,
+            radius: 1,
+            tilt: 0.9,
+            label: {
+              show: true,
+              radius: 0.8,
+              formatter: function(label, slice){
+                return '<div style="font-size:x-small;text-align:center;padding:2px;color:white;">'+label+'<br/>'+Math.round(slice.percent)+'%</div>';
+              },
+              background: {
+                color: "#000",
+                opacity: 0.5
+              }
+            }
+          }
+        },
+        legend: {
+          show: false
+        }
+      });
+    };
+
+    var getColors = function(size){
+      var colors = []; 
+      var color_min = 30;
+      var color_max = 230;
+      var loop = Math.ceil(size / 6);
+      var color_base = Math.round((color_max - color_min) / (loop + 1));
+
+      if ($.type(size) !== "number") {
+        return [];
+      }
+
+      rgbTo16 = function(rgb){
+        return "#" + rgb.map(
+          function(a) {
+            return ("0" + parseInt(a).toString(16)).slice(-2)
+          }
+        ).join("");
+      };
+
+      for (var i=1; i<=loop; i++) {
+        colors.push(rgbTo16([color_max, color_base * i + color_min, color_min]));
+        colors.push(rgbTo16([color_base * i + color_min, color_max, color_min]));
+        colors.push(rgbTo16([color_min, color_max, color_base * i + color_min]));
+        colors.push(rgbTo16([color_min, color_base * i + color_min, color_max]));
+        colors.push(rgbTo16([color_base * i + color_min, color_min, color_max]));
+        colors.push(rgbTo16([color_max, color_min, color_base * i + color_min]));
+      }
+
+      return colors;
+    };
+    
+    var setGrid = function(course_structure){
+      var dataView;
+      var grid;
+      var data = [];
+  
+      var CourseNameFormatter = function(row, cell, value, columnDef, dataContext) {
+        value = value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+        var spacer = "<span style='display:inline-block;height:1px;width:" + (15 * dataContext["indent"]) + "px'></span>";
+        var idx = dataView.getIdxById(dataContext.id);
+        return spacer + " &nbsp;" + value;
+      };
+  
+      var columns = [
+        {id: "id", name: "#", field: "id"},
+        {id: "course", name: "Course", field: "course", width: 600, formatter: CourseNameFormatter},
+        {id: "question", name: "Question", field: "question"},
+        {id: "correct", name: "Percentage of correct answer", field: "correct", formatter:Slick.Formatters.PercentCompleteFormatter},
+        {id: "attempt", name: "Average of attempts", field: "attempt", selectable: true},
+      ];
+  
+      var options = {
+        enableCellNavigation: true,
+        enableColumnReorder: false,
+        forceFitColumns: true
+      };
+  
+      var i = 0;
+      Object.keys(course_structure).forEach(function(key) {
+        counts = this[key].counts;
+        question = ("module_id" in this[key])? this[key].module_id.split("_")[1] - 1: "-";
+        correct = ("correct_counts" in this[key])? this[key].correct_counts / counts * 100: "-";
+        attempt = ("attempts" in this[key])? this[key].attempts / counts: "-";
+        answer = ("student_answers" in this[key])? this[key].student_answers: "-";
+
+        data[i] = {
+          id: i + 1,
+          course: this[key].display_name,
+          question: question,
+          correct: correct,
+          attempt: attempt,
+          answer: answer,
+          useage_id: this[key].usage_id,
+          indent: this[key].indent,
+          has_children: this[key].has_children,
+        };
+        i++;
+      }, course_structure);
+
+      dataView = new Slick.Data.DataView();
+      dataView.beginUpdate();
+      dataView.setItems(data);
+      dataView.endUpdate();
+      dataView.getItemMetadata = function(row) {
+        indent = dataView.getItem(row)["indent"];
+        if (indent < 3) {
+          return {"columns": {"1": {"colspan": 4}}};
+        }
+      };
+
+      grid = new Slick.Grid("#ProgressGrid", dataView, columns, options);
+      grid.onClick.subscribe(function (e, args) {
+        var data = grid.getDataItem(args.row);
+        if ("answer" in data && $.type(data["answer"]) === "object") {
+          $("#SelectionStatus").text("#" + data["id"]);
+          var answers_data = [];
+          var colors = getColors(Object.keys(data["answer"]).length);
+          var i=0;
+          Object.keys(data["answer"]).forEach(function(key) {
+            answers_data.push({label: key, data: this[key], color: colors[i]});
+            i++;
+          }, data["answer"]);
+          drawPieChart(answers_data);
+        }
+        e.stopImmediatePropagation();
+      });
+    };
+
+    $(function() {
+      ##var course_structure_url = "${section_data['course_structure_url']}";
+      ##var problem_data_url = "${section_data['problem_data_url']}";
+      ##var progress_csv_url = "${section_data['progress_csv_url']}";
+      var progress_list_url = "${section_data['progress_list_url']}";
+
+      $.ajax({
+        type: 'GET',
+        url: progress_list_url,
+        dataType: 'json',
+        timeout: 10000,
+        ##statusCode: {
+        ##  404: function(){
+        ##  }
+        ##},
+        success: function(course_structure){
+          setGrid(course_structure);
+        },
+        error: function(xhr, status, thrown){
+          console.log("ajax error");
+        }
+      });
+    });
+  </script>
+
+<%doc>
   <h2> ${_("Student Progress")} </h2>
   <ul class="progress-report-list"> 
     <li><p>${_("Current CSV: created ")}${ section_data['current_csv']}</p></li>
@@ -28,40 +255,5 @@
   </ul>
   <div class="request-response msg-confirm" id="pgreport-request-response"></div>
   <div class="request-response-error msg-error" id="pgreport-request-response-error"></div>
-
-
-%if settings.FEATURES.get('ENABLE_INSTRUCTOR_BACKGROUND_TASKS'):
-  <br/>
-  <div class="running-tasks-container action-type-container">
-    <h3> ${_("Pending Instructor Tasks")} </h3>
-    <p>${_("The status for any active tasks appears in a table below.")} </p>
-    <br />
-
-    <div class="running-tasks-table" data-endpoint="${ section_data['list_instructor_tasks_url'] }"></div>
-  </div>
-%endif
-
-%if section_data["modules"]: 
-  <hr>
-  <h2> ${_("Problem Module Progress")} </h2>
-  %for loc in section_data["module_tree"]:
-    %for key, value in loc.items():
-      %if section_data["modules"].has_key(str(key)):
-        <h3>Section: ${value[0]}, Subsection: ${value[1]}, Unit: ${value[2]}</h3>
-        <table class="modules-table">
-          <tr>
-            <th><br/></th>
-            <th>${key}</th>
-          </tr>
-          %for key, value in sorted(section_data["modules"][str(key)].items()):
-            <tr>
-              <th>${key}</th><td>${value}</td>
-            </tr>
-          %endfor
-        </table>
-        <br/>
-      %endif
-    %endfor
-  %endfor
-%endif
+</%doc>
 </div>

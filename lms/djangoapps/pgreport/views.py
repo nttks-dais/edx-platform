@@ -1,45 +1,51 @@
 """
 Function to grasp the progress of the course.
 """
-from django.contrib.auth.models import User
-from django.core.cache import cache
-from django.test.client import RequestFactory
-from courseware import grades
-from courseware.courses import get_course
-from student.models import UserStanding
-from instructor.utils import get_module_for_student
-import numpy as np
-import unicodecsv as csv
 import logging
-import StringIO
-import gzip
-
-from .models import ProgressModules
-from cache_toolbox.core import del_cached_content
-from opaque_keys import InvalidKeyError
+import json
+from django.views.decorators import csrf
+from django.views.decorators.http import require_GET
+from django.utils.translation import ugettext as _
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from student.models import UserStanding
+from courseware.models import StudentModule
+from courseware.courses import get_course
+from util.json_request import JsonResponse, JsonResponseBadRequest
 from opaque_keys.edx.keys import CourseKey, AssetKey
-from opaque_keys.edx.locator import CourseLocator
+
 from xmodule.contentstore.content import StaticContent
 from xmodule.contentstore.django import contentstore
-from gridfs.errors import GridFSError
 from xmodule.exceptions import NotFoundError
-from django.db import DatabaseError
 
+
+from django_future.csrf import ensure_csrf_cookie
+from django.views.decorators.cache import cache_control
+from instructor.views.tools import handle_dashboard_error
+from instructor.views.api import require_level
+
+#from opaque_keys import InvalidKeyError
+#from xmodule.contentstore.content import StaticContent
+#from xmodule.contentstore.django import contentstore
+#from gridfs.errors import GridFSError
+#from xmodule.exceptions import NotFoundError
+#from django.core.cache import cache
+#from django.db import DatabaseError
+
+#import unicodecsv as csv
+#import StringIO
+#import gzip
+
+"""
+<div style="display:none">
+    <input type="hidden" name="csrfmiddlewaretoken" value="$csrf_token"/>
+</div>
+"""
 
 log = logging.getLogger("progress_report")
-OPERATION = {
-    "all": ("summary", "modules"),
-    "summary": ("summary"),
-    "modules": ("modules"),
-}
-ROUND = 3
 
 
 class ProgressReportException(Exception):
-    pass
-
-
-class InvalidCommand(ProgressReportException):
     pass
 
 
@@ -47,311 +53,254 @@ class UserDoesNotExists(ProgressReportException):
     pass
 
 
-class ProgressReport(object):
-    """Progress report class."""
-
-    def __init__(self, course_id, update_state=None, debug=False):
-        """Initialize."""
-        self.course_id = get_coursekey(course_id)
-        self.update_state = update_state
-        self.debug = debug
-        self.module_summary = {}
-        """
-        if isinstance(self.course_id, CourseKey):
-            self.course = get_course(self.course_id)
-        else:
-            self.course = get_course(CourseKey.from_string(self.course_id))
-        """
-        self.course = get_course(self.course_id)
-
-        self.request = self._create_request()
-        self.enroll_count, self.active_count, self.students = self.get_active_students(
-            self.course_id)
-        self.location_list = {}
-        self.location_parent = []
-        self._get_children_rec(self.course)
-        self.courseware_summary = {
-            "enrollments": self.enroll_count,
-            "active_students": self.active_count,
-            "module_tree": self.location_parent
-        }
-
-    @staticmethod
-    def get_active_students(course_id):
-        """Get active enrolled students."""
-        course_key = get_coursekey(course_id)
-        enrollments = User.objects.filter(
-            courseenrollment__course_id__exact=course_key)
-
-        active_students = enrollments.filter(is_active=1).exclude(
-            standing__account_status__exact=UserStanding.ACCOUNT_DISABLED)
-
-        if not active_students:
-            log.error("Enrolled active user does not exists.")
-            raise UserDoesNotExists("Enrolled active user does not exists.")
-
-        return (enrollments.count(), active_students.count(), active_students)
-
-    def _create_request(self):
-        """Create a request instance."""
-        factory = RequestFactory()
-        request = factory.get('/')
-        request.session = {}
-        return request
-
-    def _calc_statistics(self):
-        """Calculate statistics of problem modules."""
-        module_summary_data = {}
-        for key, stat_list in self.module_statistics.items():
-            stat = np.array(stat_list)
-            module_summary_data[key] = {}
-            module_summary_data[key]["mean"] = round(np.mean(stat), ROUND)
-            module_summary_data[key]["median"] = round(np.median(stat), ROUND)
-            module_summary_data[key]["variance"] = round(np.var(stat), ROUND)
-            module_summary_data[key]["standard_deviation"] = round(np.std(stat), ROUND)
-
-        return module_summary_data
-
-    def _get_correctmap(self, module):
-        """Get correct_map of problem modules."""
-        #if problem is not choosen, corrects is empty.
-        corrects = {}
-        for key in module.correct_map.keys():
-            if module.correct_map[key].get("correctness") == "correct":
-                corrects.update({key: 1})
-            else:
-                corrects.update({key: 0})
-
-        return corrects
-
-    def _get_student_answers(self, module):
-        """Get student_answers of problem modules."""
-        #if problem is not choosen, corrects is empty.
-        student_answers = {}
-        for key, answers in module.student_answers.items():
-            if isinstance(answers, list):
-                student_answers[key] = {}
-                for answer in answers:
-                    student_answers[key][answer] = 1
-            else:
-                student_answers[key] = {answers: 1}
-
-        return student_answers
-
-    def _get_module_data(self, module):
-        """Get problem modules data."""
-        corrects = self._get_correctmap(module)
-        student_answers = self._get_student_answers(module)
-        return {
-            "display_name": module.display_name,
-            "type": module.category,
-            "start": module.start,
-            "due": module.due,
-            "weight": module.weight,
-            "score/total": module.get_progress(),
-            "correct_map": corrects,
-            "student_answers": student_answers,
-        }
-
-    def _increment_student_answers(self, name, answers, unit_id):
-        """Increment student_answers."""
-        for key, value in answers.items():
-            if self.module_summary[name]["student_answers"].has_key(unit_id):
-                if self.module_summary[name]["student_answers"][unit_id].has_key(key):
-                    self.module_summary[name]["student_answers"][unit_id][key] += value
-                else:
-                    self.module_summary[name]["student_answers"][unit_id][key] = value
-            else:
-                self.module_summary[name]["student_answers"][unit_id] = {key: value}
-
-    def _increment_student_correctmap(self, name, value, unit_id):
-        """Increment correct_map."""
-        if self.module_summary[name]["correct_map"].has_key(unit_id):
-            self.module_summary[name]["correct_map"][unit_id] += value
-        else:
-            self.module_summary[name]["correct_map"][unit_id] = value
-
-    def collect_module_summary(self, module):
-        """Collect summary of problem modules."""
-        name = module.location
-        module_data = {}
-        module_data = self._get_module_data(module)
-        corrects = module_data["correct_map"]
-        student_answers = module_data["student_answers"]
-        module_progress = module.get_progress()
-        if module_progress is None:
-            score = total = 0
-        else:
-            score, total = module_progress.frac()
-
-        #if not self.module_statistics.has_key(name):
-        #    self.module_statistics[name] = []
-        #self.module_statistics[name].append(float(score))
-
-        if self.module_summary.has_key(name):
-            for unit_id, value in corrects.items():
-                self._increment_student_correctmap(name, value, unit_id)
-            for unit_id, answers in student_answers.items():
-                if isinstance(answers, list):
-                    for answer in answers:
-                        self._increment_student_answers(name, answer, unit_id)
-                else:
-                    self._increment_student_answers(name, answers, unit_id)
-        else:
-            self.module_summary[name] = {
-                "max_score": 0.0,
-                "total_score": 0.0,
-                "count": 0,
-                "submit_count": 0,
-            }
-            self.module_summary[name].update(module_data)
-
-        self.module_summary[name]["max_score"] += float(score)
-        self.module_summary[name]["total_score"] += float(total)
-        self.module_summary[name]["count"] += 1
-
-        if hasattr(module, "is_submitted"):
-            self.module_summary[name]["submit_count"] += 1
-
-    def _get_children_rec(self, course, parent=None):
-        """Get locations recursively."""
-        for child in course.get_children():
-            locations = self.location_list[child.category] if self.location_list.has_key(
-                child.category) else []
-            locations.append(child.location)
-            self.location_list[child.category] = locations
-
-            if child.category in ("sequential", "chapter", "vertical"):
-                if parent:
-                    parent.append(child.display_name)
-                else:
-                    parent = [child.display_name]
-            else:
-                self.location_parent.append({child.location: list(parent)})
-
-            if child.has_children:
-                self._get_children_rec(child, parent)
-                parent.pop()
-
-    def yield_students_progress(self):
-        """Yield progress of students as CSV row."""
-        header_flag = False
-        student_count = 0
-        for student in self.students.iterator():
-            student_count += 1
-            if (student_count % 100 == 0) or (
-                student_count == self.courseware_summary['active_students']
-            ):
-                msg = "Progress %d/%d" % (
-                    student_count, self.courseware_summary['active_students'])
-
-                if self.update_state is not None:
-                    self.update_state(state=msg)
-
-                log.info(msg)
-
-            self.request.user = student
-            grade = grades.grade(student, self.request, self.course)
-
-            for category in self.location_list.keys():
-                if category not in ["problem"]:
-                    continue
-
-                for loc in self.location_list[category]:
-                    module = get_module_for_student(student, loc)
-
-                    if module is None:
-                        log.debug(" * No state found: %s" % (student))
-                        continue
-
-                    module_data = self._get_module_data(module)
-                    csvrow = [
-                        student.username,
-                        module.location,
-                        student.last_login.strftime("%Y/%m/%d %H:%M:%S %Z"),
-                        grade["grade"],
-                        grade["percent"]
-                    ]
-
-                    if header_flag is False:
-                        header = ["username", "location", "last_login", "grade", "percent"]
-                        for key in module_data.keys():
-                            header.append(key)
-                        header_flag = True
-                        yield header
-
-                    for key in module_data.keys():
-                        csvrow.append(module_data[key])
-
-                    yield csvrow
-
-    def get_raw(self, command="all"):
-        """Get raw data of progress."""
-        if not OPERATION.has_key(command):
-            log.error('Invalid command: {}'.format(command))
-            raise InvalidCommand("Invalid command: {}".format(command))
-
-        if command == "summary":
-            return self.courseware_summary
-
-        self.courseware_summary["graded_students"] = 0
-        student_count = 0
-        for student in self.students.iterator():
-            student_count += 1
-            if (student_count % 100 == 0) or (
-                student_count == self.courseware_summary['active_students']
-            ):
-                msg = "Progress %d/%d" % (
-                    student_count, self.courseware_summary['active_students'])
-
-                if self.update_state is not None:
-                    self.update_state(state=msg)
-
-                log.info(msg)
-
-            self.request.user = student
-            log.debug(" * Active user: {}".format(student))
-            grade = grades.grade(student, self.request, self.course)
-
-            if grade["grade"] is not None:
-                self.courseware_summary["graded_students"] += 1
-
-            for category in self.location_list.keys():
-                if category not in ["problem"]:
-                    continue
-
-                for loc in self.location_list[category]:
-                    log.debug(" * Active location: {}".format(loc))
-                    module = get_module_for_student(student, loc)
-
-                    if module is None:
-                        log.debug(" * No state found: %s" % (student))
-                        continue
-
-                    self.collect_module_summary(module)
-
-        cache.set(
-            'progress_summary',
-            self.courseware_summary["graded_students"],
-            timeout=24 * 60 * 60
-        )
-
-        #statistics = self._calc_statistics()
-        #for key in statistics.keys():
-        #    self.module_summary[key].update(statistics[key])
-
-        if command == "modules":
-            return self.module_summary
-
-        return self.courseware_summary, self.module_summary
-
-
 def get_coursekey(course_id):
     return CourseKey.from_string(course_id) if not isinstance(course_id, CourseKey) else course_id
 
 
+class ProgressReport(object):
+    """Progress report class."""
+
+    def __init__(self, course_id):
+        """Initialize."""
+        self.course_id = get_coursekey(course_id)
+        self.location_list = []
+
+    def get_active_students(self):
+        """Get active enrolled students."""
+        enrollments = User.objects.filter(
+            courseenrollment__course_id__exact=self.course_id)
+
+        active_students = enrollments.filter(is_active=1).exclude(
+            standing__account_status__exact=UserStanding.ACCOUNT_DISABLED)
+
+        return (enrollments.count(), active_students.count())
+
+    def get_course_structure(self):
+        self.location_list = []
+        course = get_course(self.course_id)
+        self._get_children_module(course)
+
+        return self.location_list
+
+    def _get_children_module(self, course, parent=[]):
+        for child in course.get_children():
+            if child.category not in (
+                "chapter", "sequential", "vertical", "problem", "openassessment"):
+                continue
+
+            module = {
+                "usage_id": child.scope_ids.usage_id.to_deprecated_string(),
+                "category": child.category,
+                "display_name": child.display_name_with_default,
+                "indent": len(parent),
+                "module_size": 0,
+                "has_children": child.has_children,
+                "parent": list(parent),
+            }
+
+            self.location_list.append(module)
+
+            if child.has_children:
+                parent.append(child.scope_ids.usage_id.to_deprecated_string())
+                self._get_children_module(child, parent) 
+                parent.pop()
+            else:
+                self.location_list[-1]["module_size"] += 1
+
+    def get_problem_data(self):
+        problem_data = {}
+        for module in StudentModule.all_submitted_problems_read_only(self.course_id):
+            key = str(module.module_state_key)
+            state = json.loads(module.state)
+
+            if problem_data.has_key(key):
+                current = problem_data[key]
+                problem_data[key] = {
+                    "counts": current["counts"] + 1,
+                    "attempts": current["attempts"] + state.get("attempts"),
+                    "correct_maps":  self._get_correctmap_data(
+                        current["correct_maps"], state.get("correct_map")),
+                    "student_answers": self._get_student_answers_data(
+                        current["student_answers"], state.get("student_answers")),
+                }
+            else:
+                problem_data[key] = {
+                    "counts": 1,
+                    "attempts": state.get("attempts"),
+                    "correct_maps":  self._get_correctmap_data(
+                        {}, state.get("correct_map")),
+                    "student_answers": self._get_student_answers_data(
+                        {}, state.get("student_answers")),
+                }
+
+        return problem_data
+
+    def _get_correctmap_data(self, sum_correct_map, correct_map):
+        for key in correct_map.keys():
+            corrects_data = {}
+            if correct_map[key].get("correctness") == "correct":
+                corrects_data.update({key: 1})
+            else:
+                corrects_data.update({key: 0})
+
+            if sum_correct_map.has_key(key):
+                sum_correct_map[key] += corrects_data[key]
+            else:
+                sum_correct_map[key] = corrects_data[key]
+
+        return sum_correct_map
+
+    def _get_student_answers_data(self, sum_student_answers, student_answers):
+
+        for key, answers in student_answers.items():
+            answers_data = {}
+            if isinstance(answers, list):
+                answers_data[key] = {}
+                for answer in answers:
+                    answers_data[key][answer] = 1
+            else:
+                answers_data[key] = {answers: 1}
+
+            if sum_student_answers.has_key(key):
+                for answer, count in answers_data[key].items():
+                    if sum_student_answers[key].has_key(answer):
+                        sum_student_answers[key][answer] += answers_data[key][answer]
+                    else:
+                        sum_student_answers[key][answer] = answers_data[key][answer]
+            else:
+                sum_student_answers[key] = answers_data[key]
+
+        return sum_student_answers
+
+    def get_progress_list(self):
+        structure = self.get_course_structure()
+        problems = self.get_problem_data()
+        result = list(structure)
+
+        for idx in xrange(0, len(structure)):
+            if structure[idx]["category"] != "problem": continue
+            usage_id = structure[idx]["usage_id"] 
+
+            try:
+                i = 0
+                for key, value in sorted(problems[usage_id]["student_answers"].items()):
+                    module = structure[idx].copy()
+                    module["module_id"] = key
+                    module["student_answers"] = value
+                    module["counts"] = problems[usage_id]["counts"]
+                    module["attempts"] = problems[usage_id]["attempts"]
+                    if problems[usage_id]["correct_maps"].has_key(key):
+                        module["correct_counts"] = problems[usage_id]["correct_maps"][key]
+
+                    result.insert(idx + i, module)
+                    i += 1
+
+            except KeyError as e:
+                pass
+
+        return result
+
+    def handle_ajax(self, dispatch, data):
+        """
+        This is called by courseware.module_render, to handle an AJAX call.
+        `data` is request.POST.
+        """
+        handlers = {}
+        #_ = self.runtime.service(self, "i18n").ugettext
+
+        if dispatch not in handlers:
+            return 'Error: {} is not a known capa action'.format(dispatch)
+
+        try:
+            result = handlers[dispatch](data)
+        except:
+            pass
+
+        return json.dumps(result, cls=ComplexEncoder)
+
+
+@ensure_csrf_cookie
+@handle_dashboard_error
+@require_level('staff')
+@require_GET
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+def ajax_get_course_structure(request, course_id):
+    progress = ProgressReport(course_id)
+    json = progress.get_course_structure()
+    return JsonResponse(json)
+
+
+@ensure_csrf_cookie
+@handle_dashboard_error
+@require_level('staff')
+@require_GET
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+def ajax_get_problem_data(request, course_id):
+    progress = ProgressReport(course_id)
+    json = progress.get_problem_data()
+    return JsonResponse(json)
+
+@ensure_csrf_cookie
+@handle_dashboard_error
+@require_level('staff')
+@require_GET
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+def ajax_get_progress_list(request, course_id):
+    progress = ProgressReport(course_id)
+    json = progress.get_progress_list()
+    return JsonResponse(json)
+
+@ensure_csrf_cookie
+@handle_dashboard_error
+@require_level('staff')
+@require_GET
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+def ajax_get_pgreport_csv(request, course_id):
+    course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    loc = StaticContent.compute_location(course_key, "progress_students.csv.gz")
+    store = contentstore()
+    try:
+        content = store.find(loc, throw_on_not_found=True, as_stream=True)
+    except NotFoundError as e:
+        return HttpResponseForbidden(e)
+
+    response = HttpResponse(content_type="application/x-gzip")
+    response['Content-Disposition'] = 'attachment; filename={}'.format(content.name)
+    for csv_data in content.stream_data():
+        response.write(csv_data)
+
+    return response
+
+
+    """
+    def _get_children_module(self, course, parent=[]):
+        for child in course.get_children():
+            if child.category not in (
+                "chapter", "sequential", "vertical", "problem", "openassessment"):
+                continue
+
+            module = {
+                "usage_id": child.scope_ids.usage_id.to_deprecated_string(),
+                "category": child.category,
+                "display_name": child.display_name_with_default,
+                "children": []
+            }
+
+            if child.has_children:
+                if parent:
+                    parent["children"].append(module)
+                else:
+                    self.location_list.append(module)
+
+                self._get_children_module(child, module)
+            else:
+                if parent:
+                    parent["children"].append(module)
+                else:
+                    self.location_list.append(module)
+    """
+"""
 def get_pgreport_csv(course_id):
-    """Get progress of students."""
     course_key = get_coursekey(course_id)
     location = StaticContent.compute_location(course_key, "progress_students.csv.gz")
     store = contentstore()
@@ -376,7 +325,6 @@ def get_pgreport_csv(course_id):
 
 
 def create_pgreport_csv(course_id, update_state=None):
-    """Create CSV of progress to MongoDB."""
     course_key = get_coursekey(course_id)
 
     try:
@@ -411,55 +359,9 @@ def create_pgreport_csv(course_id, update_state=None):
 
 
 def delete_pgreport_csv(course_id):
-    """Delete CSV of progress to MongoDB."""
     course_key = get_coursekey(course_id)
     location = StaticContent.compute_location(course_key, "progress_students.csv.gz")
     store = contentstore()
     content = store.find(location)
     store.delete(content.get_id())
-
-
-def get_pgreport_table(course_id):
-    """Get table of progress_modules."""
-    course_key = get_coursekey(course_id)
-    progress = ProgressReport(course_key)
-    summary = progress.get_raw(command="summary")
-    modules_dict = ProgressModules.objects.filter(course_id=course_key).values()
-    modules = {}
-
-    for module in modules_dict:
-        loc = module.pop("location")
-        modules[str(loc)] = module
-
-    return summary, modules
-
-
-def update_pgreport_table(course_id, update_state=None):
-    """Update table of progress_modules."""
-    course_key = get_coursekey(course_id)
-    progress = ProgressReport(course_key, update_state)
-    modules = progress.get_raw(command="modules")
-
-    for loc, params in modules.items():
-        try:
-            progress_entry = ProgressModules(
-                course_id=course_key,
-                location=loc,
-                display_name=params["display_name"],
-                count=params["count"],
-                max_score=params["max_score"],
-                total_score=params["total_score"],
-                submit_count=params["submit_count"],
-                weight=params["weight"],
-                start=params["start"],
-                due=params["due"],
-                correct_map=params["correct_map"],
-                student_answers=params["student_answers"])
-                #mean=params["mean"],
-                #median=params["median"],
-                #variance=params["variance"],
-                #standard_deviation=params["standard_deviation"])
-            progress_entry.save()
-        except DatabaseError as e:
-            log.error(" * Database Error: {}".format(e))
-            raise
+"""
